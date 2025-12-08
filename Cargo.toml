@@ -34,7 +34,4 @@ unknown_lints = "deny"
 dbg_macro = "deny"
 
 [workspace.metadata.release]
-pre-release-commit-message = "chore: release v{{version}}"
-shared-version = true
 sign-tag = true
-tag-name = "v{{version}}"

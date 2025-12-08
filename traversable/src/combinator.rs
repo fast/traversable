@@ -27,6 +27,11 @@ pub trait VisitorExt: Visitor {
     /// # Examples
     ///
     /// ```
+    /// # #[cfg(not(feature = "derive"))]
+    /// # fn main() {}
+    /// #
+    /// # #[cfg(feature = "derive")]
+    /// # fn main() {
     /// use std::ops::ControlFlow;
     ///
     /// use traversable::Traversable;
@@ -64,6 +69,7 @@ pub trait VisitorExt: Visitor {
     /// // v1 runs first, then v2.
     /// let mut combined = v1.or(v2);
     /// data.traverse(&mut combined);
+    /// # }
     /// ```
     fn or<V>(self, other: V) -> OrVisitor<Self, V>
     where
@@ -89,6 +95,11 @@ pub trait VisitorMutExt: VisitorMut {
     /// # Examples
     ///
     /// ```
+    /// # #[cfg(not(feature = "derive"))]
+    /// # fn main() {}
+    /// #
+    /// # #[cfg(feature = "derive")]
+    /// # fn main() {
     /// use std::ops::ControlFlow;
     ///
     /// use traversable::TraversableMut;
@@ -128,6 +139,7 @@ pub trait VisitorMutExt: VisitorMut {
     ///
     /// assert_eq!(data.foo.0, 2);
     /// assert_eq!(data.bar.0, 4);
+    /// # }
     /// ```
     fn or<V>(self, other: V) -> OrVisitor<Self, V>
     where

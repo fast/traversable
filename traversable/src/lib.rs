@@ -16,8 +16,8 @@
 //!
 //! A visitor pattern implementation for traversing data structures.
 //!
-//! This crate provides [`Traversable`] and [`TraversableMut`] trait for types that can be
-//! traversed, as well as [`Visitor`] and [`VisitorMut`] trait for types that perform the
+//! This crate provides [`Traversable`] and [`TraversableMut`] traits for types that can be
+//! traversed, as well as [`Visitor`] and [`VisitorMut`] traits for types that perform the
 //! traversal.
 //!
 //! It is designed to be flexible and efficient, allowing for deep traversal of complex data

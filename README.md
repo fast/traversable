@@ -32,6 +32,7 @@ traversable = { version = "0.1", features = ["derive", "std"] }
 Define your data structures and derive `Traversable`:
 
 ```rust
+use std::any::Any;
 use std::ops::ControlFlow;
 
 use traversable::Traversable;
@@ -59,7 +60,7 @@ struct FileCounter {
 impl Visitor for FileCounter {
     type Break = ();
 
-    fn enter(&mut self, node: &dyn core::any::Any) -> ControlFlow<Self::Break> {
+    fn enter(&mut self, node: &dyn Any) -> ControlFlow<Self::Break> {
         if let Some(file) = node.downcast_ref::<File>() {
             self.count += 1;
             self.total_size += file.size;

@@ -39,8 +39,8 @@
 //! #
 //! # #[cfg(all(feature = "derive", feature = "std"))]
 //! # fn main() {
-//! use std::ops::ControlFlow;
 //! use std::any::Any;
+//! use std::ops::ControlFlow;
 //!
 //! use traversable::Traversable;
 //! use traversable::Visitor;
@@ -146,10 +146,12 @@ mod impls;
 /// [`Traversable`] items are visited. You can implement `enter` and `leave`
 /// methods to perform actions before and after processing a node, respectively.
 ///
-/// For an example of implementing `Visitor`, see the [`FileCounter`] struct
-/// in the crate-level documentation.
+/// For an example of implementing `Visitor`, see the `FileCounter` struct
+/// in the [crate-level documentation](self).
 ///
 /// You can also use [`make_visitor`] to create a visitor from closures.
+///
+/// [`make_visitor`]: function::make_visitor
 pub trait Visitor {
     /// The type that can be used to break traversal early.
     type Break;
@@ -185,11 +187,10 @@ pub trait Visitor {
 ///
 /// use traversable::TraversableMut;
 /// use traversable::VisitorMut;
-///
-/// #[cfg_attr(feature = "derive", derive(TraversableMut))]
+#[cfg_attr(feature = "derive", doc = "#[derive(TraversableMut)]")]
 /// struct Node {
 ///     value: i32,
-///     #[cfg_attr(feature = "derive", traverse(skip))]
+#[cfg_attr(feature = "derive", doc = "    #[traverse(skip)]")]
 ///     id: u32,
 /// }
 ///
@@ -215,6 +216,8 @@ pub trait Visitor {
 /// ```
 ///
 /// You can also use [`make_visitor_mut`] to create a mutable visitor from closures.
+///
+/// [`make_visitor_mut`]: function::make_visitor_mut
 pub trait VisitorMut {
     /// The type that can be used to break traversal early.
     type Break;
@@ -237,12 +240,129 @@ pub trait VisitorMut {
 }
 
 /// A trait for types that can be traversed by a visitor.
+///
+/// This trait is the core of the traversable pattern. It allows a [`Visitor`] to
+/// walk through a data structure.
+///
+/// # Deriving `Traversable`
+///
+/// The easiest way to implement `Traversable` is to use the `derive` macro.
+///
+/// ```rust
+/// use traversable::Traversable;
+///
+#[cfg_attr(feature = "derive", doc = "#[derive(Traversable)]")]
+/// struct MyStruct {
+///     data: u64,
+#[cfg_attr(
+    feature = "derive",
+    doc = r#"    #[traverse(skip)] // skip this field"#
+)]
+///     hidden: String,
+/// }
+/// ```
+///
+/// # Attributes
+///
+/// The derive macro supports the following attributes:
+///
+/// * `#[traverse(skip)]`: Skips traversal of the annotated field or variant.
+/// * `#[traverse(with = "function_name")]`: Uses a custom function to traverse the field.
+///
+/// ## Custom Traversal Function
+///
+/// When using `#[traverse(with = "path::to::func")]`, the function must have the signature:
+///
+/// ```rust,ignore
+/// fn func<V: Visitor>(item: &ItemType, visitor: &mut V) -> ControlFlow<V::Break>
+/// ```
+///
+/// Example:
+///
+/// ```rust
+/// use std::ops::ControlFlow;
+///
+/// use traversable::Traversable;
+/// use traversable::Visitor;
+///
+/// fn traverse_string_len<V: Visitor>(s: &String, visitor: &mut V) -> ControlFlow<V::Break> {
+///     s.len().traverse(visitor)
+/// }
+///
+#[cfg_attr(feature = "derive", doc = "#[derive(Traversable)]")]
+/// struct User {
+#[cfg_attr(
+    feature = "derive",
+    doc = r#"    #[traverse(with = "traverse_string_len")]"#
+)]
+///     name: String,
+/// }
+/// ```
 pub trait Traversable: core::any::Any {
     /// Traverse the data structure with the given visitor.
     fn traverse<V: Visitor>(&self, visitor: &mut V) -> ControlFlow<V::Break>;
 }
 
 /// A trait for types that can be traversed mutably by a visitor.
+///
+/// This trait allows a [`VisitorMut`] to walk through a data structure and possibly
+/// mutate it.
+///
+/// # Deriving `TraversableMut`
+///
+/// The easiest way to implement `TraversableMut` is to use the `derive` macro.
+///
+/// ```rust
+/// use traversable::TraversableMut;
+///
+#[cfg_attr(feature = "derive", doc = "#[derive(TraversableMut)]")]
+/// struct MyStruct {
+///     data: u64,
+#[cfg_attr(feature = "derive", doc = "    #[traverse(skip)] // skip this field")]
+///     readonly: String,
+/// }
+/// ```
+///
+/// # Attributes
+///
+/// The derive macro supports the following attributes:
+///
+/// * `#[traverse(skip)]`: Skips traversal of the annotated field or variant.
+/// * `#[traverse(with = "function_name")]`: Uses a custom function to traverse the field.
+///
+/// ## Custom Traversal Function
+///
+/// When using `#[traverse(with = "path::to::func")]`, the function must have the signature:
+///
+/// ```rust,ignore
+/// fn func<V: VisitorMut>(item: &mut ItemType, visitor: &mut V) -> ControlFlow<V::Break>
+/// ```
+///
+/// Example:
+///
+/// ```rust
+/// use std::ops::ControlFlow;
+///
+/// use traversable::TraversableMut;
+/// use traversable::VisitorMut;
+///
+/// fn traverse_string_chars<V: VisitorMut>(
+///     s: &mut String,
+///     visitor: &mut V,
+/// ) -> ControlFlow<V::Break> {
+///     // custom traversal logic
+///     ControlFlow::Continue(())
+/// }
+///
+#[cfg_attr(feature = "derive", doc = "#[derive(TraversableMut)]")]
+/// struct User {
+#[cfg_attr(
+    feature = "derive",
+    doc = r#"    #[traverse(with = "traverse_string_chars")]"#
+)]
+///     name: String,
+/// }
+/// ```
 pub trait TraversableMut: core::any::Any {
     /// Traverse the mutable data structure with the given visitor.
     fn traverse_mut<V: VisitorMut>(&mut self, visitor: &mut V) -> ControlFlow<V::Break>;

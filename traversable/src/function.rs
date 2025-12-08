@@ -92,8 +92,7 @@ type DefaultVisitFnMut<T, B> = fn(&mut T) -> ControlFlow<B>;
 /// use traversable::Traversable;
 /// use traversable::Visitor;
 /// use traversable::function::make_visitor;
-///
-/// #[cfg_attr(feature = "derive", derive(Traversable))]
+#[cfg_attr(feature = "derive", doc = "#[derive(Traversable)]")]
 /// struct Item {
 ///     value: i32,
 /// }
@@ -143,8 +142,7 @@ where
 /// use traversable::Traversable;
 /// use traversable::Visitor;
 /// use traversable::function::make_visitor_enter;
-///
-/// #[cfg_attr(feature = "derive", derive(Traversable))]
+#[cfg_attr(feature = "derive", doc = "#[derive(Traversable)]")]
 /// struct Item {
 ///     value: i32,
 /// }
@@ -187,8 +185,7 @@ where
 /// use traversable::Traversable;
 /// use traversable::Visitor;
 /// use traversable::function::make_visitor_leave;
-///
-/// #[cfg_attr(feature = "derive", derive(Traversable))]
+#[cfg_attr(feature = "derive", doc = "#[derive(Traversable)]")]
 /// struct Item {
 ///     value: i32,
 /// }
@@ -235,8 +232,7 @@ where
 /// use traversable::TraversableMut;
 /// use traversable::VisitorMut;
 /// use traversable::function::make_visitor_mut;
-///
-/// #[cfg_attr(feature = "derive", derive(TraversableMut))]
+#[cfg_attr(feature = "derive", doc = "#[derive(TraversableMut)]")]
 /// struct Item {
 ///     value: i32,
 /// }
@@ -285,8 +281,7 @@ where
 /// use traversable::TraversableMut;
 /// use traversable::VisitorMut;
 /// use traversable::function::make_visitor_enter_mut;
-///
-/// #[cfg_attr(feature = "derive", derive(TraversableMut))]
+#[cfg_attr(feature = "derive", doc = "#[derive(TraversableMut)]")]
 /// struct Item {
 ///     value: i32,
 /// }
@@ -329,8 +324,7 @@ where
 /// use traversable::TraversableMut;
 /// use traversable::VisitorMut;
 /// use traversable::function::make_visitor_leave_mut;
-///
-/// #[cfg_attr(feature = "derive", derive(TraversableMut))]
+#[cfg_attr(feature = "derive", doc = "#[derive(TraversableMut)]")]
 /// struct Item {
 ///     value: i32,
 /// }

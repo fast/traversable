@@ -29,25 +29,17 @@ pub trait VisitorExt: Visitor {
     /// # Examples
     ///
     /// ```
-    /// # #[cfg(not(feature = "derive"))]
-    /// # fn main() {}
-    /// #
-    /// # #[cfg(feature = "derive")]
-    /// # fn main() {
     /// use core::ops::ControlFlow;
     ///
     /// use traversable::Traversable;
     /// use traversable::Visitor;
     /// use traversable::combinator::VisitorExt;
     /// use traversable::function::make_visitor_enter;
-    ///
-    /// #[derive(Traversable)]
+    #[cfg_attr(feature = "derive", doc = "#[derive(Traversable)]")]
     /// struct Foo(i32);
-    ///
-    /// #[derive(Traversable)]
+    #[cfg_attr(feature = "derive", doc = "#[derive(Traversable)]")]
     /// struct Bar(i32);
-    ///
-    /// #[derive(Traversable)]
+    #[cfg_attr(feature = "derive", doc = "#[derive(Traversable)]")]
     /// struct Data {
     ///     foo: Foo,
     ///     bar: Bar,
@@ -68,6 +60,8 @@ pub trait VisitorExt: Visitor {
     ///     ControlFlow::<()>::Continue(())
     /// });
     ///
+    /// # #[cfg(feature = "derive")]
+    /// # {
     /// // v1 runs first, then v2.
     /// let mut combined = v1.or(v2);
     /// data.traverse(&mut combined);
@@ -97,25 +91,17 @@ pub trait VisitorMutExt: VisitorMut {
     /// # Examples
     ///
     /// ```
-    /// # #[cfg(not(feature = "derive"))]
-    /// # fn main() {}
-    /// #
-    /// # #[cfg(feature = "derive")]
-    /// # fn main() {
     /// use core::ops::ControlFlow;
     ///
     /// use traversable::TraversableMut;
     /// use traversable::VisitorMut;
     /// use traversable::combinator::VisitorMutExt;
     /// use traversable::function::make_visitor_enter_mut;
-    ///
-    /// #[derive(TraversableMut)]
+    #[cfg_attr(feature = "derive", doc = "#[derive(TraversableMut)]")]
     /// struct Foo(i32);
-    ///
-    /// #[derive(TraversableMut)]
+    #[cfg_attr(feature = "derive", doc = "#[derive(TraversableMut)]")]
     /// struct Bar(i32);
-    ///
-    /// #[derive(TraversableMut)]
+    #[cfg_attr(feature = "derive", doc = "#[derive(TraversableMut)]")]
     /// struct Data {
     ///     foo: Foo,
     ///     bar: Bar,
@@ -136,6 +122,8 @@ pub trait VisitorMutExt: VisitorMut {
     ///     ControlFlow::<()>::Continue(())
     /// });
     ///
+    /// # #[cfg(feature = "derive")]
+    /// # {
     /// let mut combined = v1.or(v2);
     /// data.traverse_mut(&mut combined);
     ///

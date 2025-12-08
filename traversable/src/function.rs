@@ -87,12 +87,18 @@ type DefaultVisitFnMut<T, B> = fn(&mut T) -> ControlFlow<B>;
 /// # Example
 ///
 /// ```rust
-/// use std::ops::ControlFlow;
+/// # #[cfg(not(feature = "derive"))]
+/// # fn main() {}
+/// #
+/// # #[cfg(feature = "derive")]
+/// # fn main() {
+/// use core::ops::ControlFlow;
 ///
 /// use traversable::Traversable;
 /// use traversable::Visitor;
 /// use traversable::function::make_visitor;
-#[cfg_attr(feature = "derive", doc = "#[derive(Traversable)]")]
+///
+/// #[derive(Traversable)]
 /// struct Item {
 ///     value: i32,
 /// }
@@ -112,8 +118,6 @@ type DefaultVisitFnMut<T, B> = fn(&mut T) -> ControlFlow<B>;
 ///     },
 /// );
 ///
-/// # #[cfg(feature = "derive")]
-/// # {
 /// item.traverse(&mut visitor);
 /// assert_eq!(total_value, 10);
 /// # }
@@ -137,12 +141,18 @@ where
 /// # Example
 ///
 /// ```rust
-/// use std::ops::ControlFlow;
+/// # #[cfg(not(feature = "derive"))]
+/// # fn main() {}
+/// #
+/// # #[cfg(feature = "derive")]
+/// # fn main() {
+/// use core::ops::ControlFlow;
 ///
 /// use traversable::Traversable;
 /// use traversable::Visitor;
 /// use traversable::function::make_visitor_enter;
-#[cfg_attr(feature = "derive", doc = "#[derive(Traversable)]")]
+///
+/// #[derive(Traversable)]
 /// struct Item {
 ///     value: i32,
 /// }
@@ -156,8 +166,6 @@ where
 ///     ControlFlow::Continue(())
 /// });
 ///
-/// # #[cfg(feature = "derive")]
-/// # {
 /// item.traverse(&mut visitor);
 /// assert_eq!(count, 1);
 /// # }
@@ -180,12 +188,18 @@ where
 /// # Example
 ///
 /// ```rust
-/// use std::ops::ControlFlow;
+/// # #[cfg(not(feature = "derive"))]
+/// # fn main() {}
+/// #
+/// # #[cfg(feature = "derive")]
+/// # fn main() {
+/// use core::ops::ControlFlow;
 ///
 /// use traversable::Traversable;
 /// use traversable::Visitor;
 /// use traversable::function::make_visitor_leave;
-#[cfg_attr(feature = "derive", doc = "#[derive(Traversable)]")]
+///
+/// #[derive(Traversable)]
 /// struct Item {
 ///     value: i32,
 /// }
@@ -199,8 +213,6 @@ where
 ///     ControlFlow::Continue(())
 /// });
 ///
-/// # #[cfg(feature = "derive")]
-/// # {
 /// item.traverse(&mut visitor);
 /// assert!(visited_leave);
 /// # }
@@ -227,12 +239,18 @@ where
 /// # Example
 ///
 /// ```rust
-/// use std::ops::ControlFlow;
+/// # #[cfg(not(feature = "derive"))]
+/// # fn main() {}
+/// #
+/// # #[cfg(feature = "derive")]
+/// # fn main() {
+/// use core::ops::ControlFlow;
 ///
 /// use traversable::TraversableMut;
 /// use traversable::VisitorMut;
 /// use traversable::function::make_visitor_mut;
-#[cfg_attr(feature = "derive", doc = "#[derive(TraversableMut)]")]
+///
+/// #[derive(TraversableMut)]
 /// struct Item {
 ///     value: i32,
 /// }
@@ -251,8 +269,6 @@ where
 ///     },
 /// );
 ///
-/// # #[cfg(feature = "derive")]
-/// # {
 /// item.traverse_mut(&mut visitor);
 /// assert_eq!(item.value, 11);
 /// # }
@@ -276,12 +292,18 @@ where
 /// # Example
 ///
 /// ```rust
-/// use std::ops::ControlFlow;
+/// # #[cfg(not(feature = "derive"))]
+/// # fn main() {}
+/// #
+/// # #[cfg(feature = "derive")]
+/// # fn main() {
+/// use core::ops::ControlFlow;
 ///
 /// use traversable::TraversableMut;
 /// use traversable::VisitorMut;
 /// use traversable::function::make_visitor_enter_mut;
-#[cfg_attr(feature = "derive", doc = "#[derive(TraversableMut)]")]
+///
+/// #[derive(TraversableMut)]
 /// struct Item {
 ///     value: i32,
 /// }
@@ -295,8 +317,6 @@ where
 ///     ControlFlow::Continue(())
 /// });
 ///
-/// # #[cfg(feature = "derive")]
-/// # {
 /// item.traverse_mut(&mut visitor);
 /// assert_eq!(count, 1);
 /// # }
@@ -319,12 +339,18 @@ where
 /// # Example
 ///
 /// ```rust
-/// use std::ops::ControlFlow;
+/// # #[cfg(not(feature = "derive"))]
+/// # fn main() {}
+/// #
+/// # #[cfg(feature = "derive")]
+/// # fn main() {
+/// use core::ops::ControlFlow;
 ///
 /// use traversable::TraversableMut;
 /// use traversable::VisitorMut;
 /// use traversable::function::make_visitor_leave_mut;
-#[cfg_attr(feature = "derive", doc = "#[derive(TraversableMut)]")]
+///
+/// #[derive(TraversableMut)]
 /// struct Item {
 ///     value: i32,
 /// }
@@ -338,8 +364,6 @@ where
 ///     ControlFlow::Continue(())
 /// });
 ///
-/// # #[cfg(feature = "derive")]
-/// # {
 /// item.traverse_mut(&mut visitor);
 /// assert!(visited_leave);
 /// # }

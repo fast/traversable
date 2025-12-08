@@ -182,15 +182,20 @@ pub trait Visitor {
 /// # Example
 ///
 /// ```rust
+/// # #[cfg(not(feature = "derive"))]
+/// # fn main() {}
+/// #
+/// # #[cfg(feature = "derive")]
+/// # fn main() {
 /// use core::any::Any;
 /// use core::ops::ControlFlow;
 ///
 /// use traversable::TraversableMut;
 /// use traversable::VisitorMut;
-#[cfg_attr(feature = "derive", doc = "#[derive(TraversableMut)]")]
+/// #[derive(TraversableMut)]
 /// struct Node {
 ///     value: i32,
-#[cfg_attr(feature = "derive", doc = "    #[traverse(skip)]")]
+///     #[traverse(skip)]
 ///     id: u32,
 /// }
 ///
@@ -207,8 +212,6 @@ pub trait Visitor {
 ///     }
 /// }
 ///
-/// # #[cfg(feature = "derive")]
-/// # {
 /// let mut node = Node { value: 10, id: 1 };
 /// node.traverse_mut(&mut Incrementer);
 /// assert_eq!(node.value, 11);
@@ -249,17 +252,20 @@ pub trait VisitorMut {
 /// The easiest way to implement `Traversable` is to use the `derive` macro.
 ///
 /// ```rust
+/// # #[cfg(not(feature = "derive"))]
+/// # fn main() {}
+/// #
+/// # #[cfg(feature = "derive")]
+/// # fn main() {
 /// use traversable::Traversable;
 ///
-#[cfg_attr(feature = "derive", doc = "#[derive(Traversable)]")]
+/// #[derive(Traversable)]
 /// struct MyStruct {
 ///     data: u64,
-#[cfg_attr(
-    feature = "derive",
-    doc = r#"    #[traverse(skip)] // skip this field"#
-)]
+///     #[traverse(skip)] // skip this field
 ///     hidden: String,
 /// }
+/// # }
 /// ```
 ///
 /// # Attributes
@@ -280,7 +286,12 @@ pub trait VisitorMut {
 /// Example:
 ///
 /// ```rust
-/// use std::ops::ControlFlow;
+/// # #[cfg(not(feature = "derive"))]
+/// # fn main() {}
+/// #
+/// # #[cfg(feature = "derive")]
+/// # fn main() {
+/// use core::ops::ControlFlow;
 ///
 /// use traversable::Traversable;
 /// use traversable::Visitor;
@@ -289,14 +300,12 @@ pub trait VisitorMut {
 ///     s.len().traverse(visitor)
 /// }
 ///
-#[cfg_attr(feature = "derive", doc = "#[derive(Traversable)]")]
+/// #[derive(Traversable)]
 /// struct User {
-#[cfg_attr(
-    feature = "derive",
-    doc = r#"    #[traverse(with = "traverse_string_len")]"#
-)]
+///     #[traverse(with = "traverse_string_len")]
 ///     name: String,
 /// }
+/// # }
 /// ```
 pub trait Traversable: core::any::Any {
     /// Traverse the data structure with the given visitor.
@@ -313,14 +322,20 @@ pub trait Traversable: core::any::Any {
 /// The easiest way to implement `TraversableMut` is to use the `derive` macro.
 ///
 /// ```rust
+/// # #[cfg(not(feature = "derive"))]
+/// # fn main() {}
+/// #
+/// # #[cfg(feature = "derive")]
+/// # fn main() {
 /// use traversable::TraversableMut;
 ///
-#[cfg_attr(feature = "derive", doc = "#[derive(TraversableMut)]")]
+/// #[derive(TraversableMut)]
 /// struct MyStruct {
 ///     data: u64,
-#[cfg_attr(feature = "derive", doc = "    #[traverse(skip)] // skip this field")]
+///     #[traverse(skip)] // skip this field
 ///     readonly: String,
 /// }
+/// # }
 /// ```
 ///
 /// # Attributes
@@ -341,7 +356,12 @@ pub trait Traversable: core::any::Any {
 /// Example:
 ///
 /// ```rust
-/// use std::ops::ControlFlow;
+/// # #[cfg(not(feature = "derive"))]
+/// # fn main() {}
+/// #
+/// # #[cfg(feature = "derive")]
+/// # fn main() {
+/// use core::ops::ControlFlow;
 ///
 /// use traversable::TraversableMut;
 /// use traversable::VisitorMut;
@@ -354,14 +374,12 @@ pub trait Traversable: core::any::Any {
 ///     ControlFlow::Continue(())
 /// }
 ///
-#[cfg_attr(feature = "derive", doc = "#[derive(TraversableMut)]")]
+/// #[derive(TraversableMut)]
 /// struct User {
-#[cfg_attr(
-    feature = "derive",
-    doc = r#"    #[traverse(with = "traverse_string_chars")]"#
-)]
+///     #[traverse(with = "traverse_string_chars")]
 ///     name: String,
 /// }
+/// # }
 /// ```
 pub trait TraversableMut: core::any::Any {
     /// Traverse the mutable data structure with the given visitor.

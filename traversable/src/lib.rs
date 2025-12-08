@@ -30,6 +30,7 @@ pub use traversable_derive::Traversable;
 /// See [`TraversableMut`].
 pub use traversable_derive::TraversableMut;
 
+pub mod combinator;
 pub mod function;
 
 /// Implementations for third-party library types.

@@ -159,7 +159,7 @@ impl<V: VisitorMut> VisitorMutExt for V {}
 
 /// A visitor that runs two visitors in sequence.
 ///
-/// This struct is created by the `chain` method on [`VisitorExt`] or [`VisitorMutExt`].
+/// This struct is created by [`VisitorExt::chain`] or [`VisitorMutExt::chain`].
 pub struct Chain<V1, V2> {
     visitor1: V1,
     visitor2: V2,

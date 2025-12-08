@@ -34,7 +34,7 @@ pub trait VisitorExt: Visitor {
     /// #
     /// # #[cfg(feature = "derive")]
     /// # fn main() {
-    /// use std::ops::ControlFlow;
+    /// use core::ops::ControlFlow;
     ///
     /// use traversable::Traversable;
     /// use traversable::Visitor;
@@ -102,7 +102,7 @@ pub trait VisitorMutExt: VisitorMut {
     /// #
     /// # #[cfg(feature = "derive")]
     /// # fn main() {
-    /// use std::ops::ControlFlow;
+    /// use core::ops::ControlFlow;
     ///
     /// use traversable::TraversableMut;
     /// use traversable::VisitorMut;

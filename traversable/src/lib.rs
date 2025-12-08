@@ -12,7 +12,111 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! # Traversable
+//!
 //! A visitor pattern implementation for traversing data structures.
+//!
+//! This crate provides a [`Traversable`] trait (and [`TraversableMut`]) for types that can be
+//! traversed, and a [`Visitor`] trait (and [`VisitorMut`]) for types that perform the traversal.
+//!
+//! It is designed to be flexible and efficient, allowing for deep traversal of complex data
+//! structures.
+//!
+//! ## Quick Start
+//!
+//! Add `traversable` to your `Cargo.toml` with the `derive` feature:
+//!
+//! ```toml
+//! [dependencies]
+//! traversable = { version = "0.1", features = ["derive", "std"] }
+//! ```
+//!
+//! Define your data structures and derive [`Traversable`]:
+//!
+//! ```rust
+//! # #[cfg(not(all(feature = "derive", feature = "std")))]
+//! # fn main() {}
+//! #
+//! # #[cfg(all(feature = "derive", feature = "std"))]
+//! # fn main() {
+//! use std::ops::ControlFlow;
+//! use std::any::Any;
+//!
+//! use traversable::Traversable;
+//! use traversable::Visitor;
+//!
+//! #[derive(Traversable)]
+//! struct Directory {
+//!     name: String,
+//!     files: Vec<File>,
+//!     #[traverse(skip)] // skip traverse this field
+//!     cache_id: u64,
+//! }
+//!
+//! #[derive(Traversable)]
+//! struct File {
+//!     name: String,
+//!     size: u64,
+//! }
+//!
+//! struct FileCounter {
+//!     count: usize,
+//!     total_size: u64,
+//! }
+//!
+//! impl Visitor for FileCounter {
+//!     type Break = ();
+//!
+//!     fn enter(&mut self, node: &dyn Any) -> ControlFlow<Self::Break> {
+//!         if let Some(file) = node.downcast_ref::<File>() {
+//!             self.count += 1;
+//!             self.total_size += file.size;
+//!         }
+//!         ControlFlow::Continue(())
+//!     }
+//! }
+//!
+//! let root = Directory {
+//!     name: "root".to_string(),
+//!     files: vec![
+//!         File {
+//!             name: "a.txt".to_string(),
+//!             size: 100,
+//!         },
+//!         File {
+//!             name: "b.rs".to_string(),
+//!             size: 200,
+//!         },
+//!     ],
+//!     cache_id: 12345,
+//! };
+//!
+//! let mut counter = FileCounter {
+//!     count: 0,
+//!     total_size: 0,
+//! };
+//! root.traverse(&mut counter);
+//!
+//! assert_eq!(counter.count, 2);
+//! assert_eq!(counter.total_size, 300);
+//! # }
+//! ```
+//!
+//! ## Attributes
+//!
+//! The derive macro supports the following attributes on fields and variants:
+//!
+//! * `#[traverse(skip)]`: Skips traversal of the annotated field or variant.
+//! * `#[traverse(with = "function_name")]`: Uses a custom function to traverse the field.
+//!
+//! ## Features
+//!
+//! * `derive`: Enables procedural macros `#[derive(Traversable)]` and `#[derive(TraversableMut)]`.
+//! * `std`: Enables support for standard library types (e.g., `Vec`, `HashMap`, `Box`).
+//! * `traverse-trivial`: Enables traversal for primitive types (`u8`, `i32`, `bool`, etc.). By
+//!   default, these are ignored.
+//! * `traverse-std`: Enables traversal for "primary" std types like `String`. By default, these are
+//!   ignored.
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![deny(missing_docs)]
@@ -37,6 +141,15 @@ pub mod function;
 mod impls;
 
 /// A visitor that can be used to traverse a data structure.
+///
+/// Implement this trait to define custom logic that executes when
+/// [`Traversable`] items are visited. You can implement `enter` and `leave`
+/// methods to perform actions before and after processing a node, respectively.
+///
+/// For an example of implementing `Visitor`, see the [`FileCounter`] struct
+/// in the crate-level documentation.
+///
+/// You can also use [`make_visitor`] to create a visitor from closures.
 pub trait Visitor {
     /// The type that can be used to break traversal early.
     type Break;
@@ -59,6 +172,49 @@ pub trait Visitor {
 }
 
 /// A visitor that can be used to traverse a mutable data structure.
+///
+/// Implement this trait to define custom logic that executes when
+/// [`TraversableMut`] items are visited. You can implement `enter_mut` and `leave_mut`
+/// methods to perform actions before and after processing a mutable node, respectively.
+///
+/// # Example
+///
+/// ```rust
+/// use core::any::Any;
+/// use core::ops::ControlFlow;
+///
+/// use traversable::TraversableMut;
+/// use traversable::VisitorMut;
+///
+/// #[cfg_attr(feature = "derive", derive(TraversableMut))]
+/// struct Node {
+///     value: i32,
+///     #[cfg_attr(feature = "derive", traverse(skip))]
+///     id: u32,
+/// }
+///
+/// struct Incrementer;
+///
+/// impl VisitorMut for Incrementer {
+///     type Break = ();
+///
+///     fn enter_mut(&mut self, node: &mut dyn Any) -> ControlFlow<Self::Break> {
+///         if let Some(n) = node.downcast_mut::<Node>() {
+///             n.value += 1;
+///         }
+///         ControlFlow::Continue(())
+///     }
+/// }
+///
+/// # #[cfg(feature = "derive")]
+/// # {
+/// let mut node = Node { value: 10, id: 1 };
+/// node.traverse_mut(&mut Incrementer);
+/// assert_eq!(node.value, 11);
+/// # }
+/// ```
+///
+/// You can also use [`make_visitor_mut`] to create a mutable visitor from closures.
 pub trait VisitorMut {
     /// The type that can be used to break traversal early.
     type Break;

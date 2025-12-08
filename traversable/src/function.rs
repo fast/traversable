@@ -79,6 +79,46 @@ type DefaultVisitFn<T, B> = fn(&T) -> ControlFlow<B>;
 type DefaultVisitFnMut<T, B> = fn(&mut T) -> ControlFlow<B>;
 
 /// Create a visitor that only visits items of a specific type from a function or a closure.
+/// Creates a new visitor from `enter` and `leave` closures.
+///
+/// This is a convenience function for creating simple visitors without defining
+/// a new struct and implementing the [`Visitor`] trait manually.
+///
+/// # Example
+///
+/// ```rust
+/// use std::ops::ControlFlow;
+///
+/// use traversable::Traversable;
+/// use traversable::Visitor;
+/// use traversable::function::make_visitor;
+///
+/// #[cfg_attr(feature = "derive", derive(Traversable))]
+/// struct Item {
+///     value: i32,
+/// }
+///
+/// let item = Item { value: 10 };
+/// let mut total_value = 0;
+///
+/// let mut visitor = make_visitor::<Item, (), _, _>(
+///     |node: &Item| {
+///         // enter closure
+///         total_value += node.value;
+///         ControlFlow::Continue(())
+///     },
+///     |_node: &Item| {
+///         // leave closure
+///         ControlFlow::Continue(())
+///     },
+/// );
+///
+/// # #[cfg(feature = "derive")]
+/// # {
+/// item.traverse(&mut visitor);
+/// assert_eq!(total_value, 10);
+/// # }
+/// ```
 pub fn make_visitor<T, B, F1, F2>(enter: F1, leave: F2) -> FnVisitor<T, B, F1, F2>
 where
     T: Any,
@@ -94,6 +134,36 @@ where
 }
 
 /// Similar to [`make_visitor`], but the closure will only be called on entering.
+///
+/// # Example
+///
+/// ```rust
+/// use std::ops::ControlFlow;
+///
+/// use traversable::Traversable;
+/// use traversable::Visitor;
+/// use traversable::function::make_visitor_enter;
+///
+/// #[cfg_attr(feature = "derive", derive(Traversable))]
+/// struct Item {
+///     value: i32,
+/// }
+///
+/// let item = Item { value: 20 };
+/// let mut count = 0;
+///
+/// let mut visitor = make_visitor_enter::<Item, (), _>(|node: &Item| {
+///     // enter closure
+///     count += 1;
+///     ControlFlow::Continue(())
+/// });
+///
+/// # #[cfg(feature = "derive")]
+/// # {
+/// item.traverse(&mut visitor);
+/// assert_eq!(count, 1);
+/// # }
+/// ```
 pub fn make_visitor_enter<T, B, F>(enter: F) -> FnVisitor<T, B, F, DefaultVisitFn<T, B>>
 where
     T: Any,
@@ -108,6 +178,36 @@ where
 }
 
 /// Similar to [`make_visitor`], but the closure will only be called on leaving.
+///
+/// # Example
+///
+/// ```rust
+/// use std::ops::ControlFlow;
+///
+/// use traversable::Traversable;
+/// use traversable::Visitor;
+/// use traversable::function::make_visitor_leave;
+///
+/// #[cfg_attr(feature = "derive", derive(Traversable))]
+/// struct Item {
+///     value: i32,
+/// }
+///
+/// let item = Item { value: 30 };
+/// let mut visited_leave = false;
+///
+/// let mut visitor = make_visitor_leave::<Item, (), _>(|node: &Item| {
+///     // leave closure
+///     visited_leave = true;
+///     ControlFlow::Continue(())
+/// });
+///
+/// # #[cfg(feature = "derive")]
+/// # {
+/// item.traverse(&mut visitor);
+/// assert!(visited_leave);
+/// # }
+/// ```
 pub fn make_visitor_leave<T, B, F>(leave: F) -> FnVisitor<T, B, DefaultVisitFn<T, B>, F>
 where
     T: Any,
@@ -122,6 +222,45 @@ where
 }
 
 /// Create a visitor that only visits mutable items of a specific type from a function or a closure.
+/// Creates a new mutable visitor from `enter` and `leave` closures.
+///
+/// This is a convenience function for creating simple mutable visitors without defining
+/// a new struct and implementing the [`VisitorMut`] trait manually.
+///
+/// # Example
+///
+/// ```rust
+/// use std::ops::ControlFlow;
+///
+/// use traversable::TraversableMut;
+/// use traversable::VisitorMut;
+/// use traversable::function::make_visitor_mut;
+///
+/// #[cfg_attr(feature = "derive", derive(TraversableMut))]
+/// struct Item {
+///     value: i32,
+/// }
+///
+/// let mut item = Item { value: 10 };
+///
+/// let mut visitor = make_visitor_mut::<Item, (), _, _>(
+///     |node: &mut Item| {
+///         // enter_mut closure
+///         node.value += 1;
+///         ControlFlow::Continue(())
+///     },
+///     |_node: &mut Item| {
+///         // leave_mut closure
+///         ControlFlow::Continue(())
+///     },
+/// );
+///
+/// # #[cfg(feature = "derive")]
+/// # {
+/// item.traverse_mut(&mut visitor);
+/// assert_eq!(item.value, 11);
+/// # }
+/// ```
 pub fn make_visitor_mut<T, B, F1, F2>(enter: F1, leave: F2) -> FnVisitor<T, B, F1, F2>
 where
     T: Any,
@@ -137,6 +276,36 @@ where
 }
 
 /// Similar to [`make_visitor_mut`], but the closure will only be called on entering.
+///
+/// # Example
+///
+/// ```rust
+/// use std::ops::ControlFlow;
+///
+/// use traversable::TraversableMut;
+/// use traversable::VisitorMut;
+/// use traversable::function::make_visitor_enter_mut;
+///
+/// #[cfg_attr(feature = "derive", derive(TraversableMut))]
+/// struct Item {
+///     value: i32,
+/// }
+///
+/// let mut item = Item { value: 20 };
+/// let mut count = 0;
+///
+/// let mut visitor = make_visitor_enter_mut::<Item, (), _>(|node: &mut Item| {
+///     // enter_mut closure
+///     count += 1;
+///     ControlFlow::Continue(())
+/// });
+///
+/// # #[cfg(feature = "derive")]
+/// # {
+/// item.traverse_mut(&mut visitor);
+/// assert_eq!(count, 1);
+/// # }
+/// ```
 pub fn make_visitor_enter_mut<T, B, F>(enter: F) -> FnVisitor<T, B, F, DefaultVisitFnMut<T, B>>
 where
     T: Any,
@@ -151,6 +320,36 @@ where
 }
 
 /// Similar to [`make_visitor_mut`], but the closure will only be called on leaving.
+///
+/// # Example
+///
+/// ```rust
+/// use std::ops::ControlFlow;
+///
+/// use traversable::TraversableMut;
+/// use traversable::VisitorMut;
+/// use traversable::function::make_visitor_leave_mut;
+///
+/// #[cfg_attr(feature = "derive", derive(TraversableMut))]
+/// struct Item {
+///     value: i32,
+/// }
+///
+/// let mut item = Item { value: 30 };
+/// let mut visited_leave = false;
+///
+/// let mut visitor = make_visitor_leave_mut::<Item, (), _>(|node: &mut Item| {
+///     // leave_mut closure
+///     visited_leave = true;
+///     ControlFlow::Continue(())
+/// });
+///
+/// # #[cfg(feature = "derive")]
+/// # {
+/// item.traverse_mut(&mut visitor);
+/// assert!(visited_leave);
+/// # }
+/// ```
 pub fn make_visitor_leave_mut<T, B, F>(leave: F) -> FnVisitor<T, B, DefaultVisitFnMut<T, B>, F>
 where
     T: Any,

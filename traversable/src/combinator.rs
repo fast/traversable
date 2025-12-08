@@ -14,6 +14,8 @@
 
 //! Combinators for Visitors.
 
+use core::ops::ControlFlow;
+
 use crate::Visitor;
 use crate::VisitorMut;
 
@@ -171,12 +173,12 @@ where
 {
     type Break = V1::Break;
 
-    fn enter(&mut self, this: &dyn core::any::Any) -> core::ops::ControlFlow<Self::Break> {
+    fn enter(&mut self, this: &dyn core::any::Any) -> ControlFlow<Self::Break> {
         self.visitor1.enter(this)?;
         self.visitor2.enter(this)
     }
 
-    fn leave(&mut self, this: &dyn core::any::Any) -> core::ops::ControlFlow<Self::Break> {
+    fn leave(&mut self, this: &dyn core::any::Any) -> ControlFlow<Self::Break> {
         self.visitor1.leave(this)?;
         self.visitor2.leave(this)
     }
@@ -189,12 +191,12 @@ where
 {
     type Break = V1::Break;
 
-    fn enter_mut(&mut self, this: &mut dyn core::any::Any) -> core::ops::ControlFlow<Self::Break> {
+    fn enter_mut(&mut self, this: &mut dyn core::any::Any) -> ControlFlow<Self::Break> {
         self.visitor1.enter_mut(this)?;
         self.visitor2.enter_mut(this)
     }
 
-    fn leave_mut(&mut self, this: &mut dyn core::any::Any) -> core::ops::ControlFlow<Self::Break> {
+    fn leave_mut(&mut self, this: &mut dyn core::any::Any) -> ControlFlow<Self::Break> {
         self.visitor1.leave_mut(this)?;
         self.visitor2.leave_mut(this)
     }

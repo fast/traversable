@@ -21,7 +21,7 @@ use core::ops::ControlFlow;
 use crate::Visitor;
 use crate::VisitorMut;
 
-/// Type returned by `make_visitor` factories.
+/// Type returned by `visitor` factories.
 pub struct FnVisitor<T, B, F1, F2> {
     enter: F1,
     leave: F2,
@@ -95,7 +95,7 @@ type DefaultVisitFnMut<T, B> = fn(&mut T) -> ControlFlow<B>;
 ///
 /// use traversable::Traversable;
 /// use traversable::Visitor;
-/// use traversable::function::make_visitor;
+/// use traversable::function::visitor;
 ///
 /// #[derive(Traversable)]
 /// struct Item {
@@ -105,7 +105,7 @@ type DefaultVisitFnMut<T, B> = fn(&mut T) -> ControlFlow<B>;
 /// let item = Item { value: 10 };
 /// let mut total_value = 0;
 ///
-/// let mut visitor = make_visitor::<Item, (), _, _>(
+/// let mut visitor = visitor::<Item, (), _, _>(
 ///     |node: &Item| {
 ///         // enter closure
 ///         total_value += node.value;
@@ -121,7 +121,7 @@ type DefaultVisitFnMut<T, B> = fn(&mut T) -> ControlFlow<B>;
 /// assert_eq!(total_value, 10);
 /// # }
 /// ```
-pub fn make_visitor<T, B, F1, F2>(enter: F1, leave: F2) -> FnVisitor<T, B, F1, F2>
+pub fn visitor<T, B, F1, F2>(enter: F1, leave: F2) -> FnVisitor<T, B, F1, F2>
 where
     T: Any,
     F1: FnMut(&T) -> ControlFlow<B>,
@@ -135,7 +135,7 @@ where
     }
 }
 
-/// Similar to [`make_visitor`], but the closure will only be called on entering.
+/// Similar to [`visitor`], but the closure will only be called on entering.
 ///
 /// # Example
 ///
@@ -149,7 +149,7 @@ where
 ///
 /// use traversable::Traversable;
 /// use traversable::Visitor;
-/// use traversable::function::make_visitor_enter;
+/// use traversable::function::visitor_enter;
 ///
 /// #[derive(Traversable)]
 /// struct Item {
@@ -159,7 +159,7 @@ where
 /// let item = Item { value: 20 };
 /// let mut count = 0;
 ///
-/// let mut visitor = make_visitor_enter::<Item, (), _>(|node: &Item| {
+/// let mut visitor = visitor_enter::<Item, (), _>(|node: &Item| {
 ///     // enter closure
 ///     count += 1;
 ///     ControlFlow::Continue(())
@@ -169,7 +169,7 @@ where
 /// assert_eq!(count, 1);
 /// # }
 /// ```
-pub fn make_visitor_enter<T, B, F>(enter: F) -> FnVisitor<T, B, F, DefaultVisitFn<T, B>>
+pub fn visitor_enter<T, B, F>(enter: F) -> FnVisitor<T, B, F, DefaultVisitFn<T, B>>
 where
     T: Any,
     F: FnMut(&T) -> ControlFlow<B>,
@@ -182,7 +182,7 @@ where
     }
 }
 
-/// Similar to [`make_visitor`], but the closure will only be called on leaving.
+/// Similar to [`visitor`], but the closure will only be called on leaving.
 ///
 /// # Example
 ///
@@ -196,7 +196,7 @@ where
 ///
 /// use traversable::Traversable;
 /// use traversable::Visitor;
-/// use traversable::function::make_visitor_leave;
+/// use traversable::function::visitor_leave;
 ///
 /// #[derive(Traversable)]
 /// struct Item {
@@ -206,7 +206,7 @@ where
 /// let item = Item { value: 30 };
 /// let mut visited_leave = false;
 ///
-/// let mut visitor = make_visitor_leave::<Item, (), _>(|node: &Item| {
+/// let mut visitor = visitor_leave::<Item, (), _>(|node: &Item| {
 ///     // leave closure
 ///     visited_leave = true;
 ///     ControlFlow::Continue(())
@@ -216,7 +216,7 @@ where
 /// assert!(visited_leave);
 /// # }
 /// ```
-pub fn make_visitor_leave<T, B, F>(leave: F) -> FnVisitor<T, B, DefaultVisitFn<T, B>, F>
+pub fn visitor_leave<T, B, F>(leave: F) -> FnVisitor<T, B, DefaultVisitFn<T, B>, F>
 where
     T: Any,
     F: FnMut(&T) -> ControlFlow<B>,
@@ -247,7 +247,7 @@ where
 ///
 /// use traversable::TraversableMut;
 /// use traversable::VisitorMut;
-/// use traversable::function::make_visitor_mut;
+/// use traversable::function::visitor_mut;
 ///
 /// #[derive(TraversableMut)]
 /// struct Item {
@@ -256,7 +256,7 @@ where
 ///
 /// let mut item = Item { value: 10 };
 ///
-/// let mut visitor = make_visitor_mut::<Item, (), _, _>(
+/// let mut visitor = visitor_mut::<Item, (), _, _>(
 ///     |node: &mut Item| {
 ///         // enter_mut closure
 ///         node.value += 1;
@@ -272,7 +272,7 @@ where
 /// assert_eq!(item.value, 11);
 /// # }
 /// ```
-pub fn make_visitor_mut<T, B, F1, F2>(enter: F1, leave: F2) -> FnVisitor<T, B, F1, F2>
+pub fn visitor_mut<T, B, F1, F2>(enter: F1, leave: F2) -> FnVisitor<T, B, F1, F2>
 where
     T: Any,
     F1: FnMut(&mut T) -> ControlFlow<B>,
@@ -286,7 +286,7 @@ where
     }
 }
 
-/// Similar to [`make_visitor_mut`], but the closure will only be called on entering.
+/// Similar to [`visitor_mut`], but the closure will only be called on entering.
 ///
 /// # Example
 ///
@@ -300,7 +300,7 @@ where
 ///
 /// use traversable::TraversableMut;
 /// use traversable::VisitorMut;
-/// use traversable::function::make_visitor_enter_mut;
+/// use traversable::function::visitor_enter_mut;
 ///
 /// #[derive(TraversableMut)]
 /// struct Item {
@@ -310,7 +310,7 @@ where
 /// let mut item = Item { value: 20 };
 /// let mut count = 0;
 ///
-/// let mut visitor = make_visitor_enter_mut::<Item, (), _>(|node: &mut Item| {
+/// let mut visitor = visitor_enter_mut::<Item, (), _>(|node: &mut Item| {
 ///     // enter_mut closure
 ///     count += 1;
 ///     ControlFlow::Continue(())
@@ -320,7 +320,7 @@ where
 /// assert_eq!(count, 1);
 /// # }
 /// ```
-pub fn make_visitor_enter_mut<T, B, F>(enter: F) -> FnVisitor<T, B, F, DefaultVisitFnMut<T, B>>
+pub fn visitor_enter_mut<T, B, F>(enter: F) -> FnVisitor<T, B, F, DefaultVisitFnMut<T, B>>
 where
     T: Any,
     F: FnMut(&mut T) -> ControlFlow<B>,
@@ -333,7 +333,7 @@ where
     }
 }
 
-/// Similar to [`make_visitor_mut`], but the closure will only be called on leaving.
+/// Similar to [`visitor_mut`], but the closure will only be called on leaving.
 ///
 /// # Example
 ///
@@ -347,7 +347,7 @@ where
 ///
 /// use traversable::TraversableMut;
 /// use traversable::VisitorMut;
-/// use traversable::function::make_visitor_leave_mut;
+/// use traversable::function::visitor_leave_mut;
 ///
 /// #[derive(TraversableMut)]
 /// struct Item {
@@ -357,7 +357,7 @@ where
 /// let mut item = Item { value: 30 };
 /// let mut visited_leave = false;
 ///
-/// let mut visitor = make_visitor_leave_mut::<Item, (), _>(|node: &mut Item| {
+/// let mut visitor = visitor_leave_mut::<Item, (), _>(|node: &mut Item| {
 ///     // leave_mut closure
 ///     visited_leave = true;
 ///     ControlFlow::Continue(())
@@ -367,7 +367,7 @@ where
 /// assert!(visited_leave);
 /// # }
 /// ```
-pub fn make_visitor_leave_mut<T, B, F>(leave: F) -> FnVisitor<T, B, DefaultVisitFnMut<T, B>, F>
+pub fn visitor_leave_mut<T, B, F>(leave: F) -> FnVisitor<T, B, DefaultVisitFnMut<T, B>, F>
 where
     T: Any,
     F: FnMut(&mut T) -> ControlFlow<B>,

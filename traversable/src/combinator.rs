@@ -39,7 +39,7 @@ pub trait VisitorExt: Visitor {
     /// use traversable::Traversable;
     /// use traversable::Visitor;
     /// use traversable::combinator::VisitorExt;
-    /// use traversable::function::make_visitor_enter;
+    /// use traversable::function::visitor_enter;
     ///
     /// #[derive(Traversable)]
     /// struct Foo(i32);
@@ -58,12 +58,12 @@ pub trait VisitorExt: Visitor {
     ///     bar: Bar(2),
     /// };
     ///
-    /// let v1 = make_visitor_enter(|foo: &Foo| {
+    /// let v1 = visitor_enter(|foo: &Foo| {
     ///     println!("Visiting Foo: {}", foo.0);
     ///     ControlFlow::<()>::Continue(())
     /// });
     ///
-    /// let v2 = make_visitor_enter(|bar: &Bar| {
+    /// let v2 = visitor_enter(|bar: &Bar| {
     ///     println!("Visiting Bar: {}", bar.0);
     ///     ControlFlow::<()>::Continue(())
     /// });
@@ -107,7 +107,7 @@ pub trait VisitorMutExt: VisitorMut {
     /// use traversable::TraversableMut;
     /// use traversable::VisitorMut;
     /// use traversable::combinator::VisitorMutExt;
-    /// use traversable::function::make_visitor_enter_mut;
+    /// use traversable::function::visitor_enter_mut;
     ///
     /// #[derive(TraversableMut)]
     /// struct Foo(i32);
@@ -126,12 +126,12 @@ pub trait VisitorMutExt: VisitorMut {
     ///     bar: Bar(2),
     /// };
     ///
-    /// let v1 = make_visitor_enter_mut(|foo: &mut Foo| {
+    /// let v1 = visitor_enter_mut(|foo: &mut Foo| {
     ///     foo.0 += 1;
     ///     ControlFlow::<()>::Continue(())
     /// });
     ///
-    /// let v2 = make_visitor_enter_mut(|bar: &mut Bar| {
+    /// let v2 = visitor_enter_mut(|bar: &mut Bar| {
     ///     bar.0 *= 2;
     ///     ControlFlow::<()>::Continue(())
     /// });

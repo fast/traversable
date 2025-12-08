@@ -69,16 +69,16 @@ pub trait VisitorExt: Visitor {
     /// });
     ///
     /// // v1 runs first, then v2.
-    /// let mut combined = v1.or(v2);
+    /// let mut combined = v1.chain(v2);
     /// data.traverse(&mut combined);
     /// # }
     /// ```
-    fn or<V>(self, other: V) -> OrVisitor<Self, V>
+    fn chain<V>(self, other: V) -> ChainVisitor<Self, V>
     where
         Self: Sized,
         V: Visitor<Break = Self::Break>,
     {
-        OrVisitor {
+        ChainVisitor {
             visitor1: self,
             visitor2: other,
         }
@@ -136,19 +136,19 @@ pub trait VisitorMutExt: VisitorMut {
     ///     ControlFlow::<()>::Continue(())
     /// });
     ///
-    /// let mut combined = v1.or(v2);
+    /// let mut combined = v1.chain(v2);
     /// data.traverse_mut(&mut combined);
     ///
     /// assert_eq!(data.foo.0, 2);
     /// assert_eq!(data.bar.0, 4);
     /// # }
     /// ```
-    fn or<V>(self, other: V) -> OrVisitor<Self, V>
+    fn chain<V>(self, other: V) -> ChainVisitor<Self, V>
     where
         Self: Sized,
         V: VisitorMut<Break = Self::Break>,
     {
-        OrVisitor {
+        ChainVisitor {
             visitor1: self,
             visitor2: other,
         }
@@ -159,14 +159,13 @@ impl<V: VisitorMut> VisitorMutExt for V {}
 
 /// A visitor that runs two visitors in sequence.
 ///
-/// This struct is created by the [`or`](VisitorExt::or) method on [`VisitorExt`] or
-/// [`VisitorMutExt`].
-pub struct OrVisitor<V1, V2> {
+/// This struct is created by the `chain` method on [`VisitorExt`] or [`VisitorMutExt`].
+pub struct ChainVisitor<V1, V2> {
     visitor1: V1,
     visitor2: V2,
 }
 
-impl<V1, V2> Visitor for OrVisitor<V1, V2>
+impl<V1, V2> Visitor for ChainVisitor<V1, V2>
 where
     V1: Visitor,
     V2: Visitor<Break = V1::Break>,
@@ -184,7 +183,7 @@ where
     }
 }
 
-impl<V1, V2> VisitorMut for OrVisitor<V1, V2>
+impl<V1, V2> VisitorMut for ChainVisitor<V1, V2>
 where
     V1: VisitorMut,
     V2: VisitorMut<Break = V1::Break>,

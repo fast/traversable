@@ -86,7 +86,7 @@ fn test_visitor_or() {
         break_on: None,
     };
 
-    let mut combined = v1.or(v2);
+    let mut combined = v1.chain(v2);
     let result = data.traverse(&mut combined);
     assert!(result.is_continue());
 
@@ -126,7 +126,7 @@ fn test_visitor_or_break_v1() {
         break_on: None,
     };
 
-    let mut combined = v1.or(v2);
+    let mut combined = v1.chain(v2);
     let result = data.traverse(&mut combined);
     assert_eq!(result, ControlFlow::Break(2));
 
@@ -161,7 +161,7 @@ fn test_visitor_or_break_v2() {
         break_on: Some(2),
     };
 
-    let mut combined = v1.or(v2);
+    let mut combined = v1.chain(v2);
     let result = data.traverse(&mut combined);
     assert_eq!(result, ControlFlow::Break(2));
 
@@ -201,7 +201,7 @@ fn test_visitor_mut_or() {
     let v1 = MutVisitor { val_multiplier: 2 };
     let v2 = MutVisitor { val_multiplier: 3 };
 
-    let mut combined = v1.or(v2);
+    let mut combined = v1.chain(v2);
     let result = data.traverse_mut(&mut combined);
     assert!(result.is_continue());
 

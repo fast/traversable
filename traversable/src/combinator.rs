@@ -32,35 +32,38 @@ pub trait VisitorExt: Visitor {
     /// use traversable::Traversable;
     /// use traversable::Visitor;
     /// use traversable::combinator::VisitorExt;
+    /// use traversable::function::make_visitor_enter;
     ///
     /// #[derive(Traversable)]
-    /// struct Person {
-    ///     name: String,
-    ///     age: u32,
+    /// struct Foo(i32);
+    ///
+    /// #[derive(Traversable)]
+    /// struct Bar(i32);
+    ///
+    /// #[derive(Traversable)]
+    /// struct Data {
+    ///     foo: Foo,
+    ///     bar: Bar,
     /// }
     ///
-    /// struct LogVisitor;
-    /// impl Visitor for LogVisitor {
-    ///     type Break = ();
-    ///     fn enter(&mut self, this: &dyn std::any::Any) -> ControlFlow<()> {
-    ///         if let Some(s) = this.downcast_ref::<String>() {
-    ///             println!("Visiting string: {}", s);
-    ///         }
-    ///         ControlFlow::Continue(())
-    ///     }
-    /// }
-    ///
-    /// let person = Person {
-    ///     name: "Alice".to_string(),
-    ///     age: 30,
+    /// let data = Data {
+    ///     foo: Foo(1),
+    ///     bar: Bar(2),
     /// };
     ///
-    /// let v1 = LogVisitor;
-    /// let v2 = LogVisitor;
+    /// let v1 = make_visitor_enter(|foo: &Foo| {
+    ///     println!("Visiting Foo: {}", foo.0);
+    ///     ControlFlow::<()>::Continue(())
+    /// });
+    ///
+    /// let v2 = make_visitor_enter(|bar: &Bar| {
+    ///     println!("Visiting Bar: {}", bar.0);
+    ///     ControlFlow::<()>::Continue(())
+    /// });
     ///
     /// // v1 runs first, then v2.
     /// let mut combined = v1.or(v2);
-    /// person.traverse(&mut combined);
+    /// data.traverse(&mut combined);
     /// ```
     fn or<V>(self, other: V) -> OrVisitor<Self, V>
     where
@@ -91,37 +94,40 @@ pub trait VisitorMutExt: VisitorMut {
     /// use traversable::TraversableMut;
     /// use traversable::VisitorMut;
     /// use traversable::combinator::VisitorMutExt;
+    /// use traversable::function::make_visitor_enter_mut;
     ///
     /// #[derive(TraversableMut)]
-    /// struct Data(i32);
+    /// struct Foo(i32);
     ///
-    /// struct AddOne;
-    /// impl VisitorMut for AddOne {
-    ///     type Break = ();
-    ///     fn enter_mut(&mut self, this: &mut dyn std::any::Any) -> ControlFlow<()> {
-    ///         if let Some(d) = this.downcast_mut::<Data>() {
-    ///             d.0 += 1;
-    ///         }
-    ///         ControlFlow::Continue(())
-    ///     }
+    /// #[derive(TraversableMut)]
+    /// struct Bar(i32);
+    ///
+    /// #[derive(TraversableMut)]
+    /// struct Data {
+    ///     foo: Foo,
+    ///     bar: Bar,
     /// }
     ///
-    /// struct Double;
-    /// impl VisitorMut for Double {
-    ///     type Break = ();
-    ///     fn enter_mut(&mut self, this: &mut dyn std::any::Any) -> ControlFlow<()> {
-    ///         if let Some(d) = this.downcast_mut::<Data>() {
-    ///             d.0 *= 2;
-    ///         }
-    ///         ControlFlow::Continue(())
-    ///     }
-    /// }
+    /// let mut data = Data {
+    ///     foo: Foo(1),
+    ///     bar: Bar(2),
+    /// };
     ///
-    /// let mut data = Data(1);
-    /// // (1 + 1) * 2 = 4
-    /// let mut combined = AddOne.or(Double);
+    /// let v1 = make_visitor_enter_mut(|foo: &mut Foo| {
+    ///     foo.0 += 1;
+    ///     ControlFlow::<()>::Continue(())
+    /// });
+    ///
+    /// let v2 = make_visitor_enter_mut(|bar: &mut Bar| {
+    ///     bar.0 *= 2;
+    ///     ControlFlow::<()>::Continue(())
+    /// });
+    ///
+    /// let mut combined = v1.or(v2);
     /// data.traverse_mut(&mut combined);
-    /// assert_eq!(data.0, 4);
+    ///
+    /// assert_eq!(data.foo.0, 2);
+    /// assert_eq!(data.bar.0, 4);
     /// ```
     fn or<V>(self, other: V) -> OrVisitor<Self, V>
     where

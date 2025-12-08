@@ -78,8 +78,7 @@ where
 type DefaultVisitFn<T, B> = fn(&T) -> ControlFlow<B>;
 type DefaultVisitFnMut<T, B> = fn(&mut T) -> ControlFlow<B>;
 
-/// Create a visitor that only visits items of a specific type from a function or a closure.
-/// Creates a new visitor from `enter` and `leave` closures.
+/// Create a visitor that only visits items of a specific type from `enter` and `leave` closures.
 ///
 /// This is a convenience function for creating simple visitors without defining
 /// a new struct and implementing the [`Visitor`] trait manually.
@@ -230,8 +229,8 @@ where
     }
 }
 
-/// Create a visitor that only visits mutable items of a specific type from a function or a closure.
-/// Creates a new mutable visitor from `enter` and `leave` closures.
+/// Create a visitor that only visits mutable items of a specific type from `enter` and `leave`
+/// closures.
 ///
 /// This is a convenience function for creating simple mutable visitors without defining
 /// a new struct and implementing the [`VisitorMut`] trait manually.

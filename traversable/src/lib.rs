@@ -16,8 +16,9 @@
 //!
 //! A visitor pattern implementation for traversing data structures.
 //!
-//! This crate provides a [`Traversable`] trait (and [`TraversableMut`]) for types that can be
-//! traversed, and a [`Visitor`] trait (and [`VisitorMut`]) for types that perform the traversal.
+//! This crate provides [`Traversable`] and [`TraversableMut`] trait for types that can be
+//! traversed, as well as [`Visitor`] and [`VisitorMut`] trait for types that perform the
+//! traversal.
 //!
 //! It is designed to be flexible and efficient, allowing for deep traversal of complex data
 //! structures.
@@ -49,7 +50,7 @@
 //! struct Directory {
 //!     name: String,
 //!     files: Vec<File>,
-//!     #[traverse(skip)] // skip traverse this field
+//!     #[traverse(skip)]
 //!     cache_id: u64,
 //! }
 //!
@@ -106,7 +107,7 @@
 //!
 //! The derive macro supports the following attributes on fields and variants:
 //!
-//! * `#[traverse(skip)]`: Skips traversal of the annotated field or variant.
+//! * `#[traverse(skip)]`: Skips traversing into the annotated field or variant.
 //! * `#[traverse(with = "function_name")]`: Uses a custom function to traverse the field.
 //!
 //! ## Features
@@ -116,7 +117,8 @@
 //! * `traverse-trivial`: Enables traversal for primitive types (`u8`, `i32`, `bool`, etc.). By
 //!   default, these are ignored.
 //! * `traverse-std`: Enables traversal for "primary" std types like `String`. By default, these are
-//!   ignored.
+//!   ignored. Note that container types like `Vec` are always traversed if the `std` feature is
+//!   enabled.
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![deny(missing_docs)]
@@ -262,7 +264,7 @@ pub trait VisitorMut {
 /// #[derive(Traversable)]
 /// struct MyStruct {
 ///     data: u64,
-///     #[traverse(skip)] // skip this field
+///     #[traverse(skip)]
 ///     hidden: String,
 /// }
 /// # }
@@ -272,7 +274,7 @@ pub trait VisitorMut {
 ///
 /// The derive macro supports the following attributes:
 ///
-/// * `#[traverse(skip)]`: Skips traversal of the annotated field or variant.
+/// * `#[traverse(skip)]`: Skips traversing into the annotated field or variant.
 /// * `#[traverse(with = "function_name")]`: Uses a custom function to traverse the field.
 ///
 /// ## Custom Traversal Function
@@ -332,7 +334,7 @@ pub trait Traversable: core::any::Any {
 /// #[derive(TraversableMut)]
 /// struct MyStruct {
 ///     data: u64,
-///     #[traverse(skip)] // skip this field
+///     #[traverse(skip)]
 ///     readonly: String,
 /// }
 /// # }
@@ -342,7 +344,7 @@ pub trait Traversable: core::any::Any {
 ///
 /// The derive macro supports the following attributes:
 ///
-/// * `#[traverse(skip)]`: Skips traversal of the annotated field or variant.
+/// * `#[traverse(skip)]`: Skips traversing into the annotated field or variant.
 /// * `#[traverse(with = "function_name")]`: Uses a custom function to traverse the field.
 ///
 /// ## Custom Traversal Function

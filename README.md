@@ -32,14 +32,16 @@ traversable = { version = "0.1", features = ["derive", "std"] }
 Define your data structures and derive `Traversable`:
 
 ```rust
-use traversable::{Traversable, Visitor};
 use std::ops::ControlFlow;
+
+use traversable::Traversable;
+use traversable::Visitor;
 
 #[derive(Traversable)]
 struct Directory {
     name: String,
     files: Vec<File>,
-    #[traverse(skip)] // Do not traverse this field
+    #[traverse(skip)]
     cache_id: u64,
 }
 
@@ -88,7 +90,7 @@ fn main() {
 
 The derive macro supports the following attributes on fields and variants:
 
-*   `#[traverse(skip)]`: Skips traversal of the annotated field or variant.
+*   `#[traverse(skip)]`: Skips traversing into the annotated field or variant.
 *   `#[traverse(with = "function_name")]`: Uses a custom function to traverse the field.
 
 ## Minimum Rust version policy

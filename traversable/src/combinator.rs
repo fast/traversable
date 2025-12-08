@@ -73,12 +73,12 @@ pub trait VisitorExt: Visitor {
     /// data.traverse(&mut combined);
     /// # }
     /// ```
-    fn chain<V>(self, other: V) -> ChainVisitor<Self, V>
+    fn chain<V>(self, other: V) -> Chain<Self, V>
     where
         Self: Sized,
         V: Visitor<Break = Self::Break>,
     {
-        ChainVisitor {
+        Chain {
             visitor1: self,
             visitor2: other,
         }
@@ -143,12 +143,12 @@ pub trait VisitorMutExt: VisitorMut {
     /// assert_eq!(data.bar.0, 4);
     /// # }
     /// ```
-    fn chain<V>(self, other: V) -> ChainVisitor<Self, V>
+    fn chain<V>(self, other: V) -> Chain<Self, V>
     where
         Self: Sized,
         V: VisitorMut<Break = Self::Break>,
     {
-        ChainVisitor {
+        Chain {
             visitor1: self,
             visitor2: other,
         }
@@ -160,12 +160,12 @@ impl<V: VisitorMut> VisitorMutExt for V {}
 /// A visitor that runs two visitors in sequence.
 ///
 /// This struct is created by the `chain` method on [`VisitorExt`] or [`VisitorMutExt`].
-pub struct ChainVisitor<V1, V2> {
+pub struct Chain<V1, V2> {
     visitor1: V1,
     visitor2: V2,
 }
 
-impl<V1, V2> Visitor for ChainVisitor<V1, V2>
+impl<V1, V2> Visitor for Chain<V1, V2>
 where
     V1: Visitor,
     V2: Visitor<Break = V1::Break>,
@@ -183,7 +183,7 @@ where
     }
 }
 
-impl<V1, V2> VisitorMut for ChainVisitor<V1, V2>
+impl<V1, V2> VisitorMut for Chain<V1, V2>
 where
     V1: VisitorMut,
     V2: VisitorMut<Break = V1::Break>,

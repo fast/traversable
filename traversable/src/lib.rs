@@ -151,9 +151,9 @@ mod impls;
 /// For an example of implementing `Visitor`, see the `FileCounter` struct
 /// in the [crate-level documentation](self).
 ///
-/// You can also use [`make_visitor`] to create a visitor from closures.
+/// You can also use [`visitor`] to create a visitor from closures.
 ///
-/// [`make_visitor`]: function::make_visitor
+/// [`visitor`]: function::visitor
 pub trait Visitor {
     /// The type that can be used to break traversal early.
     type Break;
@@ -220,9 +220,9 @@ pub trait Visitor {
 /// # }
 /// ```
 ///
-/// You can also use [`make_visitor_mut`] to create a mutable visitor from closures.
+/// You can also use [`visitor_mut`] to create a mutable visitor from closures.
 ///
-/// [`make_visitor_mut`]: function::make_visitor_mut
+/// [`visitor_mut`]: function::visitor_mut
 pub trait VisitorMut {
     /// The type that can be used to break traversal early.
     type Break;

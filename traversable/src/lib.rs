@@ -668,6 +668,16 @@ mod impl_std_container {
         }
     }
 
+    impl<T> TraversableMut for Mutex<T>
+    where
+        T: TraversableMut,
+    {
+        fn traverse_mut<V: VisitorMut>(&mut self, visitor: &mut V) -> ControlFlow<V::Break> {
+            let lock = self.get_mut().unwrap();
+            lock.traverse_mut(visitor)
+        }
+    }
+
     impl<T> Traversable for RwLock<T>
     where
         T: Traversable,
@@ -675,6 +685,16 @@ mod impl_std_container {
         fn traverse<V: Visitor>(&self, visitor: &mut V) -> ControlFlow<V::Break> {
             let lock = self.read().unwrap();
             lock.traverse(visitor)
+        }
+    }
+
+    impl<T> TraversableMut for RwLock<T>
+    where
+        T: TraversableMut,
+    {
+        fn traverse_mut<V: VisitorMut>(&mut self, visitor: &mut V) -> ControlFlow<V::Break> {
+            let lock = self.get_mut().unwrap();
+            lock.traverse_mut(visitor)
         }
     }
 

@@ -18,7 +18,7 @@
 
 ## Overview
 
-This crate provides traits and proc macros to implement the visitor pattern for arbitrary data structures. This pattern is particularly useful when dealing with complex nested data structures, abstract trees and hierarchies of all kinds.
+This crate provides traits and proc macros to implement visitor and folder patterns for arbitrary data structures. These patterns are particularly useful when dealing with complex nested data structures, abstract trees and hierarchies of all kinds.
 
 ## Quick Start
 
@@ -87,12 +87,49 @@ fn main() {
 }
 ```
 
+Use `TraversableFold` for owned bottom-up rewrites:
+
+```rust
+use std::ops::ControlFlow;
+
+use traversable::TraversableFold;
+use traversable::function::folder_leave;
+
+#[derive(TraversableFold)]
+enum Expr {
+    Add(Box<Expr>, Box<Expr>),
+    Literal(i32),
+}
+
+fn simplify(expr: Expr) -> Expr {
+    match expr {
+        Expr::Add(left, right) => match (*left, *right) {
+            (Expr::Literal(0), expr) | (expr, Expr::Literal(0)) => expr,
+            (left, right) => Expr::Add(Box::new(left), Box::new(right)),
+        },
+        expr => expr,
+    }
+}
+
+fn main() {
+    let expr = Expr::Add(Box::new(Expr::Literal(0)), Box::new(Expr::Literal(1)));
+    let mut folder = folder_leave::<Expr, (), _>(|expr| ControlFlow::Continue(simplify(expr)));
+
+    let expr = match expr.traverse_fold(&mut folder) {
+        ControlFlow::Continue(expr) => expr,
+        ControlFlow::Break(()) => unreachable!(),
+    };
+
+    assert!(matches!(expr, Expr::Literal(1)));
+}
+```
+
 ## Attributes
 
 The derive macro supports the following attributes on structs and enums:
 
-*   `#[traverse(skip_self)]`: Skips calling the visitor for the annotated type while still traversing its children.
-*   `#[traverse(skip_children)]`: Calls the visitor for the annotated type without traversing its children.
+*   `#[traverse(skip_self)]`: Skips calling the visitor or folder for the annotated type while still traversing its children.
+*   `#[traverse(skip_children)]`: Calls the visitor or folder for the annotated type without traversing its children.
 
 The derive macro supports the following attributes on fields and variants:
 

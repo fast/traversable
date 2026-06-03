@@ -14,7 +14,9 @@
 
 use core::ops::ControlFlow;
 
+use crate::Folder;
 use crate::Traversable;
+use crate::TraversableFold;
 use crate::TraversableMut;
 use crate::Visitor;
 use crate::VisitorMut;

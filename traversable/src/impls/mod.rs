@@ -28,6 +28,13 @@ macro_rules! blank_traverse_impl {
                 ControlFlow::Continue(())
             }
         }
+
+        impl TraversableFold for $type {
+            #[inline]
+            fn traverse_fold<V: Folder>(self, _folder: &mut V) -> ControlFlow<V::Break, Self> {
+                ControlFlow::Continue(self)
+            }
+        }
     };
 }
 
@@ -47,6 +54,14 @@ macro_rules! trivial_traverse_impl {
                 visitor.enter_mut(self)?;
                 visitor.leave_mut(self)?;
                 ControlFlow::Continue(())
+            }
+        }
+
+        impl TraversableFold for $type {
+            fn traverse_fold<V: Folder>(self, folder: &mut V) -> ControlFlow<V::Break, Self> {
+                let this = folder.enter(self)?;
+                let this = folder.leave(this)?;
+                ControlFlow::Continue(this)
             }
         }
     };

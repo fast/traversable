@@ -14,7 +14,9 @@
 
 use core::ops::ControlFlow;
 
+use crate::Folder;
 use crate::Traversable;
+use crate::TraversableFold;
 use crate::TraversableMut;
 use crate::Visitor;
 use crate::VisitorMut;
@@ -47,6 +49,22 @@ macro_rules! tuple_impl {
                         self.$field.traverse_mut(visitor)?;
                     )+
                     ControlFlow::Continue(())
+                }
+            }
+
+            impl<$( $type ),+> TraversableFold for ($($type,)+)
+            where
+                $(
+                    $type: TraversableFold
+                ),+
+            {
+                #[allow(non_snake_case)]
+                fn traverse_fold<V: Folder>(self, folder: &mut V) -> ControlFlow<V::Break, Self> {
+                    let ($($type,)+) = self;
+                    $(
+                        let $type = $type.traverse_fold(folder)?;
+                    )+
+                    ControlFlow::Continue(($($type,)+))
                 }
             }
         )+

@@ -16,9 +16,9 @@
 //!
 //! A visitor pattern implementation for traversing data structures.
 //!
-//! This crate provides [`Traversable`] and [`TraversableMut`] traits for types that can be
-//! traversed, as well as [`Visitor`] and [`VisitorMut`] traits for types that perform the
-//! traversal.
+//! This crate provides [`Traversable`], [`TraversableMut`], and [`TraversableFold`] traits for
+//! types that can be traversed, as well as [`Visitor`], [`VisitorMut`], and [`Folder`] traits for
+//! types that perform the traversal.
 //!
 //! It is designed to be flexible and efficient, allowing for deep traversal of complex data
 //! structures.
@@ -29,7 +29,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! traversable = { version = "0.2", features = ["derive", "std"] }
+//! traversable = { version = "0.3", features = ["derive", "std"] }
 //! ```
 //!
 //! Define your data structures and derive [`Traversable`]:
@@ -119,7 +119,8 @@
 //!
 //! ## Features
 //!
-//! * `derive`: Enables procedural macros `#[derive(Traversable)]` and `#[derive(TraversableMut)]`.
+//! * `derive`: Enables procedural macros `#[derive(Traversable)]`, `#[derive(TraversableMut)]`,
+//!   and `#[derive(TraversableFold)]`.
 //! * `std`: Enables support for standard library types (e.g., `Vec`, `HashMap`, `Box`).
 //! * `traverse-trivial`: Enables traversal for primitive types (`u8`, `i32`, `bool`, etc.). By
 //!   default, these are ignored.
@@ -139,6 +140,9 @@ use core::ops::ControlFlow;
 #[cfg(feature = "derive")]
 /// See [`Traversable`].
 pub use traversable_derive::Traversable;
+#[cfg(feature = "derive")]
+/// See [`TraversableFold`].
+pub use traversable_derive::TraversableFold;
 #[cfg(feature = "derive")]
 /// See [`TraversableMut`].
 pub use traversable_derive::TraversableMut;
@@ -248,6 +252,37 @@ pub trait VisitorMut {
     fn leave_mut(&mut self, this: &mut dyn core::any::Any) -> ControlFlow<Self::Break> {
         let _ = this;
         ControlFlow::Continue(())
+    }
+}
+
+/// A folder that can transform an owned data structure while traversing it.
+///
+/// Implement this trait to define custom logic that receives owned nodes and returns the node that
+/// should continue through traversal. This is useful for bottom-up rewrites such as simplifying an
+/// expression tree without using temporary replacement values.
+///
+/// [`TraversableFold`] calls [`Folder::enter`] before folding children and [`Folder::leave`] after
+/// folding children. The default implementation returns each node unchanged.
+///
+/// You can also use [`folder`] to create a folder from closures.
+///
+/// [`folder`]: function::folder
+pub trait Folder {
+    /// The type that can be used to break traversal early.
+    type Break;
+
+    /// Called when the folder is entering an owned node.
+    ///
+    /// Default implementation returns the node unchanged and continues traversal.
+    fn enter<T: core::any::Any>(&mut self, this: T) -> ControlFlow<Self::Break, T> {
+        ControlFlow::Continue(this)
+    }
+
+    /// Called when the folder is leaving an owned node.
+    ///
+    /// Default implementation returns the node unchanged and continues traversal.
+    fn leave<T: core::any::Any>(&mut self, this: T) -> ControlFlow<Self::Break, T> {
+        ControlFlow::Continue(this)
     }
 }
 
@@ -407,4 +442,56 @@ pub trait Traversable: core::any::Any {
 pub trait TraversableMut: core::any::Any {
     /// Traverse the mutable data structure with the given visitor.
     fn traverse_mut<V: VisitorMut>(&mut self, visitor: &mut V) -> ControlFlow<V::Break>;
+}
+
+/// A trait for types that can be traversed and transformed by a folder.
+///
+/// This trait consumes `self`, folds its children, and returns the rebuilt value. It is intended for
+/// owned transformations where a node may need to be replaced by another value of the same type.
+///
+/// # Deriving `TraversableFold`
+///
+/// The easiest way to implement `TraversableFold` is to use the derive macro.
+///
+/// ```rust
+/// # #[cfg(not(feature = "derive"))]
+/// # fn main() {}
+/// #
+/// # #[cfg(feature = "derive")]
+/// # fn main() {
+/// use traversable::TraversableFold;
+///
+/// #[derive(TraversableFold)]
+/// struct MyStruct {
+///     data: u64,
+///     #[traverse(skip)]
+///     hidden: String,
+/// }
+/// # }
+/// ```
+///
+/// # Attributes
+///
+/// The derive macro supports the following attributes on structs and enums:
+///
+/// * `#[traverse(skip_self)]`: Skips calling the folder for the annotated type while still folding
+///   its children.
+/// * `#[traverse(skip_children)]`: Calls the folder for the annotated type without folding its
+///   children.
+///
+/// The derive macro supports the following attributes on fields and variants:
+///
+/// * `#[traverse(skip)]`: Skips folding into the annotated field or variant.
+/// * `#[traverse(with = "function_name")]`: Uses a custom function to fold the field.
+///
+/// ## Custom Fold Function
+///
+/// When using `#[traverse(with = "path::to::func")]`, the function must have the signature:
+///
+/// ```rust,ignore
+/// fn func<V: Folder>(item: ItemType, folder: &mut V) -> ControlFlow<V::Break, ItemType>
+/// ```
+pub trait TraversableFold: core::any::Any + Sized {
+    /// Traverse and transform the data structure with the given folder.
+    fn traverse_fold<V: Folder>(self, folder: &mut V) -> ControlFlow<V::Break, Self>;
 }

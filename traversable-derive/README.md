@@ -20,4 +20,5 @@ This is an implementation crate for the [`traversable`](https://crates.io/crates
 
 Please refer to the main [`traversable`](https://crates.io/crates/traversable) crate for documentation and usage examples.
 
-This crate contains procedural macros that derive `Traversable` and `TraversableMut` implementations.
+This crate contains procedural macros that derive `Traversable`, `TraversableMut`, and
+`TraversableFold` implementations.

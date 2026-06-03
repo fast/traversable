@@ -16,7 +16,7 @@
 name = "traversable-derive"
 version = "0.2.0"
 
-description = "Procedural macro to derive Traversable and TraversableMut"
+description = "Procedural macro to derive Traversable, TraversableMut, and TraversableFold"
 documentation = "https://docs.rs/traversable-derive"
 keywords = ["visitor", "traverse", "traversable"]
 readme = "README.md"

@@ -55,6 +55,11 @@ pub fn derive_traversable_mut(input: proc_macro::TokenStream) -> proc_macro::Tok
     expand_with(input, |stream| impl_traversable(stream, true))
 }
 
+#[proc_macro_derive(TraversableFold, attributes(traverse))]
+pub fn derive_traversable_fold(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    expand_with(input, impl_traversable_fold)
+}
+
 fn expand_with(
     input: proc_macro::TokenStream,
     handler: impl Fn(DeriveInput) -> Result<TokenStream>,
@@ -438,6 +443,223 @@ fn traverse_field(value: &TokenStream, field: Field, mutable: bool) -> Result<To
             let traverse_fn = traverse_fn.string_literal()?.parse::<Path>()?;
             Ok(quote! {
                 #traverse_fn(#value, visitor)?;
+            })
+        }
+    }
+}
+
+fn impl_traversable_fold(input: DeriveInput) -> Result<TokenStream> {
+    let mut params = Params::from_attrs(input.attrs, "traverse")?;
+    params.validate(&["skip_self", "skip_children"])?;
+
+    let skip_visit_self = params
+        .param("skip_self")?
+        .map(Param::unit)
+        .transpose()?
+        .is_some();
+    let skip_children = params
+        .param("skip_children")?
+        .map(Param::unit)
+        .transpose()?
+        .is_some();
+
+    let name = input.ident;
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+    let crate_name = resolve_crate_name();
+
+    let enter_self = if skip_visit_self {
+        quote! {
+            let this = self;
+        }
+    } else {
+        quote! {
+            let this = #crate_name::Folder::enter(folder, self)?;
+        }
+    };
+
+    let fold_children = match input.data {
+        Data::Struct(struct_) => {
+            if skip_children {
+                Ok(TokenStream::new())
+            } else {
+                fold_struct(struct_)
+            }
+        }
+        Data::Enum(enum_) => {
+            if skip_children {
+                Ok(TokenStream::new())
+            } else {
+                fold_enum(enum_)
+            }
+        }
+        Data::Union(union_) => {
+            return Err(Error::new_spanned(
+                union_.union_token,
+                "unions are not supported",
+            ));
+        }
+    }?;
+
+    let leave_self = if skip_visit_self {
+        TokenStream::new()
+    } else {
+        quote! {
+            let this = #crate_name::Folder::leave(folder, this)?;
+        }
+    };
+
+    Ok(quote! {
+        impl #impl_generics #crate_name::TraversableFold for #name #ty_generics #where_clause {
+            fn traverse_fold<V: #crate_name::Folder>(
+                self,
+                folder: &mut V
+            ) -> ::core::ops::ControlFlow<V::Break, Self> {
+                #enter_self
+                #fold_children
+                #leave_self
+                ::core::ops::ControlFlow::Continue(this)
+            }
+        }
+    })
+}
+
+fn fold_struct(s: DataStruct) -> Result<TokenStream> {
+    Ok(match s.fields {
+        Fields::Named(fields) => {
+            let mut field_names = Vec::new();
+            let mut fold_fields = Vec::new();
+
+            for field in fields.named {
+                let field_name = field.ident.clone().unwrap();
+                fold_fields.push(fold_field(&field_name.to_token_stream(), field)?);
+                field_names.push(field_name);
+            }
+
+            quote! {
+                let this = match this {
+                    Self { #( #field_names ),* } => {
+                        #( #fold_fields )*
+                        Self { #( #field_names ),* }
+                    }
+                };
+            }
+        }
+        Fields::Unnamed(fields) => {
+            let mut field_names = Vec::new();
+            let mut fold_fields = Vec::new();
+
+            for (index, field) in fields.unnamed.into_iter().enumerate() {
+                let field_name = Ident::new(&format!("i{index}"), Span::call_site());
+                fold_fields.push(fold_field(&field_name.to_token_stream(), field)?);
+                field_names.push(field_name);
+            }
+
+            quote! {
+                let this = match this {
+                    Self( #( #field_names ),* ) => {
+                        #( #fold_fields )*
+                        Self( #( #field_names ),* )
+                    }
+                };
+            }
+        }
+        Fields::Unit => TokenStream::new(),
+    })
+}
+
+fn fold_enum(e: DataEnum) -> Result<TokenStream> {
+    let variants = e
+        .variants
+        .into_iter()
+        .map(fold_variant)
+        .collect::<Result<TokenStream>>()?;
+    Ok(quote! {
+        let this = match this {
+            #variants
+        };
+    })
+}
+
+fn fold_variant(v: Variant) -> Result<TokenStream> {
+    let mut params = Params::from_attrs(v.attrs, "traverse")?;
+    params.validate(&["skip"])?;
+    let skip = params
+        .param("skip")?
+        .map(Param::unit)
+        .transpose()?
+        .is_some();
+
+    let name = v.ident;
+    Ok(match v.fields {
+        Fields::Named(fields) => {
+            let mut field_names = Vec::new();
+            let mut fold_fields = Vec::new();
+
+            for field in fields.named {
+                let field_name = field.ident.clone().unwrap();
+                if !skip {
+                    fold_fields.push(fold_field(&field_name.to_token_stream(), field)?);
+                }
+                field_names.push(field_name);
+            }
+
+            quote! {
+                Self::#name { #( #field_names ),* } => {
+                    #( #fold_fields )*
+                    Self::#name { #( #field_names ),* }
+                }
+            }
+        }
+        Fields::Unnamed(fields) => {
+            let mut field_names = Vec::new();
+            let mut fold_fields = Vec::new();
+
+            for (index, field) in fields.unnamed.into_iter().enumerate() {
+                let field_name = Ident::new(&format!("i{index}"), Span::call_site());
+                if !skip {
+                    fold_fields.push(fold_field(&field_name.to_token_stream(), field)?);
+                }
+                field_names.push(field_name);
+            }
+
+            quote! {
+                Self::#name( #( #field_names ),* ) => {
+                    #( #fold_fields )*
+                    Self::#name( #( #field_names ),* )
+                }
+            }
+        }
+        Fields::Unit => {
+            quote! {
+                Self::#name => Self::#name
+            }
+        }
+    })
+}
+
+fn fold_field(value: &TokenStream, field: Field) -> Result<TokenStream> {
+    let mut params = Params::from_attrs(field.attrs, "traverse")?;
+    params.validate(&["skip", "with"])?;
+
+    if params
+        .param("skip")?
+        .map(Param::unit)
+        .transpose()?
+        .is_some()
+    {
+        return Ok(TokenStream::new());
+    }
+
+    let crate_name = resolve_crate_name();
+
+    match params.param("with")? {
+        None => Ok(quote! {
+            let #value = #crate_name::TraversableFold::traverse_fold(#value, folder)?;
+        }),
+        Some(traverse_fn) => {
+            let traverse_fn = traverse_fn.string_literal()?.parse::<Path>()?;
+            Ok(quote! {
+                let #value = #traverse_fn(#value, folder)?;
             })
         }
     }

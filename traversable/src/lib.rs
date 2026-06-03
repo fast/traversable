@@ -119,8 +119,8 @@
 //!
 //! ## Features
 //!
-//! * `derive`: Enables procedural macros `#[derive(Traversable)]`, `#[derive(TraversableMut)]`,
-//!   and `#[derive(TraversableFold)]`.
+//! * `derive`: Enables procedural macros `#[derive(Traversable)]`, `#[derive(TraversableMut)]`, and
+//!   `#[derive(TraversableFold)]`.
 //! * `std`: Enables support for standard library types (e.g., `Vec`, `HashMap`, `Box`).
 //! * `traverse-trivial`: Enables traversal for primitive types (`u8`, `i32`, `bool`, etc.). By
 //!   default, these are ignored.
@@ -446,8 +446,9 @@ pub trait TraversableMut: core::any::Any {
 
 /// A trait for types that can be traversed and transformed by a folder.
 ///
-/// This trait consumes `self`, folds its children, and returns the rebuilt value. It is intended for
-/// owned transformations where a node may need to be replaced by another value of the same type.
+/// This trait consumes `self`, folds its children, and returns the rebuilt value. It is intended
+/// for owned transformations where a node may need to be replaced by another value of the same
+/// type.
 ///
 /// # Deriving `TraversableFold`
 ///

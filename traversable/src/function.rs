@@ -452,10 +452,10 @@ where
 /// # Example
 ///
 /// ```rust
-/// # #[cfg(not(feature = "derive"))]
+/// # #[cfg(not(all(feature = "derive", feature = "std")))]
 /// # fn main() {}
 /// #
-/// # #[cfg(feature = "derive")]
+/// # #[cfg(all(feature = "derive", feature = "std"))]
 /// # fn main() {
 /// use core::ops::ControlFlow;
 ///

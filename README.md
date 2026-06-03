@@ -26,7 +26,7 @@ Add `traversable` to your `Cargo.toml` with the `derive` feature:
 
 ```toml
 [dependencies]
-traversable = { version = "0.2", features = ["derive", "std"] }
+traversable = { version = "0.3", features = ["derive", "std"] }
 ```
 
 Define your data structures and derive `Traversable`:

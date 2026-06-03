@@ -109,8 +109,8 @@
 //!
 //! * `#[traverse(skip_self)]`: Skips calling the visitor for the annotated type while still
 //!   traversing its children.
-//! * `#[traverse(skip_children)]`: Calls the visitor for the annotated type without traversing
-//!   its children.
+//! * `#[traverse(skip_children)]`: Calls the visitor for the annotated type without traversing its
+//!   children.
 //!
 //! The derive macro supports the following attributes on fields and variants:
 //!
@@ -283,8 +283,8 @@ pub trait VisitorMut {
 ///
 /// * `#[traverse(skip_self)]`: Skips calling the visitor for the annotated type while still
 ///   traversing its children.
-/// * `#[traverse(skip_children)]`: Calls the visitor for the annotated type without traversing
-///   its children.
+/// * `#[traverse(skip_children)]`: Calls the visitor for the annotated type without traversing its
+///   children.
 ///
 /// The derive macro supports the following attributes on fields and variants:
 ///
@@ -360,8 +360,8 @@ pub trait Traversable: core::any::Any {
 ///
 /// * `#[traverse(skip_self)]`: Skips calling the visitor for the annotated type while still
 ///   traversing its children.
-/// * `#[traverse(skip_children)]`: Calls the visitor for the annotated type without traversing
-///   its children.
+/// * `#[traverse(skip_children)]`: Calls the visitor for the annotated type without traversing its
+///   children.
 ///
 /// The derive macro supports the following attributes on fields and variants:
 ///

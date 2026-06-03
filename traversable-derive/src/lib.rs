@@ -205,10 +205,15 @@ fn resolve_crate_name() -> Path {
 
 fn impl_traversable(input: DeriveInput, mutable: bool) -> Result<TokenStream> {
     let mut params = Params::from_attrs(input.attrs, "traverse")?;
-    params.validate(&["skip"])?;
+    params.validate(&["skip_self", "skip_children"])?;
 
     let skip_visit_self = params
-        .param("skip")?
+        .param("skip_self")?
+        .map(Param::unit)
+        .transpose()?
+        .is_some();
+    let skip_children = params
+        .param("skip_children")?
         .map(Param::unit)
         .transpose()?
         .is_some();
@@ -250,8 +255,20 @@ fn impl_traversable(input: DeriveInput, mutable: bool) -> Result<TokenStream> {
     };
 
     let traverse_fields = match input.data {
-        Data::Struct(struct_) => traverse_struct(struct_, mutable),
-        Data::Enum(enum_) => traverse_enum(enum_, mutable),
+        Data::Struct(struct_) => {
+            if skip_children {
+                Ok(TokenStream::new())
+            } else {
+                traverse_struct(struct_, mutable)
+            }
+        }
+        Data::Enum(enum_) => {
+            if skip_children {
+                Ok(TokenStream::new())
+            } else {
+                traverse_enum(enum_, mutable)
+            }
+        }
         Data::Union(union_) => {
             return Err(Error::new_spanned(
                 union_.union_token,

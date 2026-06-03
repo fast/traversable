@@ -152,7 +152,7 @@ fn make_test_cmd(no_capture: bool, features: &[&str]) -> StdCommand {
 
 fn make_format_cmd(fix: bool) -> StdCommand {
     let mut cmd = find_command("cargo");
-    cmd.args(["fmt", "--all"]);
+    cmd.args(["+nightly", "fmt", "--all"]);
     if !fix {
         cmd.arg("--check");
     }
@@ -162,6 +162,7 @@ fn make_format_cmd(fix: bool) -> StdCommand {
 fn make_clippy_cmd(fix: bool) -> StdCommand {
     let mut cmd = find_command("cargo");
     cmd.args([
+        "+nightly",
         "clippy",
         "--tests",
         "--all-features",

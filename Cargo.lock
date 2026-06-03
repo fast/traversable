@@ -310,7 +310,7 @@ dependencies = [
 
 [[package]]
 name = "traversable"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "ordered-float",
  "stacksafe",
@@ -319,7 +319,7 @@ dependencies = [
 
 [[package]]
 name = "traversable-derive"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "proc-macro2",
  "quote",

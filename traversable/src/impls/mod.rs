@@ -12,7 +12,53 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#[allow(unused_macros)]
+macro_rules! blank_traverse_impl {
+    ( $type:ty ) => {
+        impl Traversable for $type {
+            #[inline]
+            fn traverse<V: Visitor>(&self, _visitor: &mut V) -> ControlFlow<V::Break> {
+                ControlFlow::Continue(())
+            }
+        }
+
+        impl TraversableMut for $type {
+            #[inline]
+            fn traverse_mut<V: VisitorMut>(&mut self, _visitor: &mut V) -> ControlFlow<V::Break> {
+                ControlFlow::Continue(())
+            }
+        }
+    };
+}
+
+#[allow(unused_macros)]
+macro_rules! trivial_traverse_impl {
+    ( $type:ty ) => {
+        impl Traversable for $type {
+            fn traverse<V: Visitor>(&self, visitor: &mut V) -> ControlFlow<V::Break> {
+                visitor.enter(self)?;
+                visitor.leave(self)?;
+                ControlFlow::Continue(())
+            }
+        }
+
+        impl TraversableMut for $type {
+            fn traverse_mut<V: VisitorMut>(&mut self, visitor: &mut V) -> ControlFlow<V::Break> {
+                visitor.enter_mut(self)?;
+                visitor.leave_mut(self)?;
+                ControlFlow::Continue(())
+            }
+        }
+    };
+}
+
 #[cfg(feature = "ordered-float-5")]
 mod ordered_float_5;
 #[cfg(feature = "stacksafe-1")]
 mod stacksafe_1;
+#[cfg(feature = "std")]
+mod std_container;
+#[cfg(feature = "std")]
+mod std_primary;
+mod trivial;
+mod tuple;

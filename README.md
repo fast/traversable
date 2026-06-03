@@ -89,6 +89,11 @@ fn main() {
 
 ## Attributes
 
+The derive macro supports the following attributes on structs and enums:
+
+*   `#[traverse(skip_self)]`: Skips calling the visitor for the annotated type while still traversing its children.
+*   `#[traverse(skip_children)]`: Calls the visitor for the annotated type without traversing its children.
+
 The derive macro supports the following attributes on fields and variants:
 
 *   `#[traverse(skip)]`: Skips traversing into the annotated field or variant.

@@ -15,11 +15,8 @@
 //! Visitors from functions or closures.
 
 use core::any::Any;
-use core::any::TypeId;
 use core::marker::PhantomData;
-use core::mem::ManuallyDrop;
 use core::ops::ControlFlow;
-use core::ptr;
 
 use crate::Folder;
 use crate::Visitor;
@@ -96,46 +93,38 @@ where
     type Break = B;
 
     fn enter<U: Any>(&mut self, this: U) -> ControlFlow<Self::Break, U> {
-        fold_if_type(this, &mut self.enter)
+        fold(this, &mut self.enter)
     }
 
     fn leave<U: Any>(&mut self, this: U) -> ControlFlow<Self::Break, U> {
-        fold_if_type(this, &mut self.leave)
+        fold(this, &mut self.leave)
     }
 }
 
-fn fold_if_type<T, U, B, F>(this: U, fold: &mut F) -> ControlFlow<B, U>
+fn fold<T, U, B, F>(this: U, fold: &mut F) -> ControlFlow<B, U>
 where
     T: Any,
     U: Any,
     F: FnMut(T) -> ControlFlow<B, T>,
 {
+    use core::any::TypeId;
+    use core::mem::ManuallyDrop;
+    use core::mem::transmute_copy;
+
     if TypeId::of::<T>() != TypeId::of::<U>() {
         return ControlFlow::Continue(this);
     }
 
-    let this = cast_between_equal_any_types::<U, T>(this);
-    match fold(this) {
-        ControlFlow::Continue(this) => {
-            ControlFlow::Continue(cast_between_equal_any_types::<T, U>(this))
-        }
-        ControlFlow::Break(break_value) => ControlFlow::Break(break_value),
-    }
-}
-
-fn cast_between_equal_any_types<From, To>(from: From) -> To
-where
-    From: Any,
-    To: Any,
-{
-    debug_assert_eq!(TypeId::of::<From>(), TypeId::of::<To>());
-
-    let from = ManuallyDrop::new(from);
-    // SAFETY: `fold_if_type` only calls this function after verifying that `From` and `To` have
-    // the same `TypeId`. `Any` is implemented only for `'static` concrete types, so equal TypeIds
-    // identify the same type. `ManuallyDrop` prevents dropping the source after ownership has been
-    // transferred through `ptr::read`.
-    unsafe { ptr::read((&*from as *const From).cast::<To>()) }
+    let this = unsafe {
+        let this = ManuallyDrop::new(this);
+        transmute_copy(&this)
+    };
+    let this = fold(this)?;
+    let this = unsafe {
+        let this = ManuallyDrop::new(this);
+        transmute_copy(&this)
+    };
+    ControlFlow::Continue(this)
 }
 
 type DefaultVisitFn<T, B> = fn(&T) -> ControlFlow<B>;

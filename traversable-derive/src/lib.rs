@@ -208,20 +208,16 @@ fn resolve_crate_name() -> Path {
     parse_quote!(::traversable)
 }
 
+fn take_unit_param(params: &mut Params, name: &str) -> Result<bool> {
+    Ok(params.param(name)?.map(Param::unit).transpose()?.is_some())
+}
+
 fn impl_traversable(input: DeriveInput, mutable: bool) -> Result<TokenStream> {
     let mut params = Params::from_attrs(input.attrs, "traverse")?;
     params.validate(&["skip_self", "skip_children"])?;
 
-    let skip_visit_self = params
-        .param("skip_self")?
-        .map(Param::unit)
-        .transpose()?
-        .is_some();
-    let skip_children = params
-        .param("skip_children")?
-        .map(Param::unit)
-        .transpose()?
-        .is_some();
+    let skip_visit_self = take_unit_param(&mut params, "skip_self")?;
+    let skip_children = take_unit_param(&mut params, "skip_children")?;
 
     let name = input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
@@ -353,7 +349,7 @@ fn traverse_enum(e: DataEnum, mutable: bool) -> Result<TokenStream> {
 fn traverse_variant(v: Variant, mutable: bool) -> Result<TokenStream> {
     let mut params = Params::from_attrs(v.attrs, "traverse")?;
     params.validate(&["skip"])?;
-    if params.param("skip")?.map(Param::unit).is_some() {
+    if take_unit_param(&mut params, "skip")? {
         return Ok(TokenStream::new());
     }
     let name = v.ident;
@@ -390,7 +386,7 @@ fn destructure_fields(fields: Fields) -> Result<TokenStream> {
                 .map(|field| {
                     let mut params = Params::from_attrs(field.attrs, "traverse")?;
                     let field_name = field.ident.unwrap();
-                    Ok(if params.param("skip")?.map(Param::unit).is_some() {
+                    Ok(if take_unit_param(&mut params, "skip")? {
                         quote! { #field_name: _ }
                     } else {
                         field_name.into_token_stream()
@@ -408,7 +404,7 @@ fn destructure_fields(fields: Fields) -> Result<TokenStream> {
                 .enumerate()
                 .map(|(index, field)| {
                     let mut params = Params::from_attrs(field.attrs, "traverse")?;
-                    Ok(if params.param("skip")?.map(Param::unit).is_some() {
+                    Ok(if take_unit_param(&mut params, "skip")? {
                         quote! { _ }
                     } else {
                         Ident::new(&format!("i{index}",), Span::call_site()).into_token_stream()
@@ -427,7 +423,7 @@ fn traverse_field(value: &TokenStream, field: Field, mutable: bool) -> Result<To
     let mut params = Params::from_attrs(field.attrs, "traverse")?;
     params.validate(&["skip", "with"])?;
 
-    if params.param("skip")?.map(Param::unit).is_some() {
+    if take_unit_param(&mut params, "skip")? {
         return Ok(TokenStream::new());
     }
 
@@ -452,16 +448,8 @@ fn impl_traversable_fold(input: DeriveInput) -> Result<TokenStream> {
     let mut params = Params::from_attrs(input.attrs, "traverse")?;
     params.validate(&["skip_self", "skip_children"])?;
 
-    let skip_visit_self = params
-        .param("skip_self")?
-        .map(Param::unit)
-        .transpose()?
-        .is_some();
-    let skip_children = params
-        .param("skip_children")?
-        .map(Param::unit)
-        .transpose()?
-        .is_some();
+    let skip_visit_self = take_unit_param(&mut params, "skip_self")?;
+    let skip_children = take_unit_param(&mut params, "skip_children")?;
 
     let name = input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
@@ -583,11 +571,7 @@ fn fold_enum(e: DataEnum) -> Result<TokenStream> {
 fn fold_variant(v: Variant) -> Result<TokenStream> {
     let mut params = Params::from_attrs(v.attrs, "traverse")?;
     params.validate(&["skip"])?;
-    let skip = params
-        .param("skip")?
-        .map(Param::unit)
-        .transpose()?
-        .is_some();
+    let skip = take_unit_param(&mut params, "skip")?;
 
     let name = v.ident;
     Ok(match v.fields {
@@ -641,12 +625,7 @@ fn fold_field(value: &TokenStream, field: Field) -> Result<TokenStream> {
     let mut params = Params::from_attrs(field.attrs, "traverse")?;
     params.validate(&["skip", "with"])?;
 
-    if params
-        .param("skip")?
-        .map(Param::unit)
-        .transpose()?
-        .is_some()
-    {
+    if take_unit_param(&mut params, "skip")? {
         return Ok(TokenStream::new());
     }
 

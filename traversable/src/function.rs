@@ -115,11 +115,17 @@ where
         return ControlFlow::Continue(this);
     }
 
+    // SAFETY: The `TypeId` check above proves that `T` and `U` are the same concrete `'static`
+    // type. `ManuallyDrop` prevents the original `U` value from being dropped after its bits are
+    // copied into the owned `T` value that is passed to the typed closure.
     let this = unsafe {
         let this = ManuallyDrop::new(this);
         transmute_copy(&this)
     };
     let this = fold(this)?;
+    // SAFETY: The same `TypeId` equality still proves that `T` and `U` are the same concrete
+    // `'static` type. `ManuallyDrop` prevents the closure result from being dropped after its bits
+    // are copied back into the caller's expected `U` type.
     let this = unsafe {
         let this = ManuallyDrop::new(this);
         transmute_copy(&this)

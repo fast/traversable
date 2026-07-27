@@ -14,7 +14,7 @@
 
 [package]
 name = "traversable-derive"
-version = "0.2.0"
+version = "0.3.0"
 
 description = "Procedural macro to derive Traversable and TraversableMut"
 documentation = "https://docs.rs/traversable-derive"

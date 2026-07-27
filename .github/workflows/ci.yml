@@ -37,7 +37,7 @@ jobs:
     name: Check
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: Swatinem/rust-cache@v2
       - name: Delete rust-toolchain.toml
         run: rm rust-toolchain.toml
@@ -58,7 +58,7 @@ jobs:
         rust-version: [ "1.85.0", "stable" ]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: Swatinem/rust-cache@v2
       - name: Delete rust-toolchain.toml
         run: rm rust-toolchain.toml

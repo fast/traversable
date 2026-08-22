@@ -47,7 +47,7 @@ jobs:
           components: rustfmt,clippy
       - uses: taiki-e/install-action@v2
         with:
-          tool: typos-cli,taplo-cli,hawkeye@7.0.0
+          tool: typos-cli,taplo-cli,hawkeye
       - run: cargo x lint
 
   test:

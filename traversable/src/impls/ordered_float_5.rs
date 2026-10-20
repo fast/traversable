@@ -23,7 +23,9 @@ use crate::VisitorMut;
 
 impl<T: 'static> Traversable for OrderedFloat<T> {
     fn traverse<V: Visitor>(&self, visitor: &mut V) -> ControlFlow<V::Break> {
-        visitor.enter(self)?;
+        if let crate::Continue::Skip = visitor.enter(self)? {
+            return ControlFlow::Continue(());
+        }
         visitor.leave(self)?;
         ControlFlow::Continue(())
     }
@@ -31,7 +33,9 @@ impl<T: 'static> Traversable for OrderedFloat<T> {
 
 impl<T: 'static> TraversableMut for OrderedFloat<T> {
     fn traverse_mut<V: VisitorMut>(&mut self, visitor: &mut V) -> ControlFlow<V::Break> {
-        visitor.enter_mut(self)?;
+        if let crate::Continue::Skip = visitor.enter_mut(self)? {
+            return ControlFlow::Continue(());
+        }
         visitor.leave_mut(self)?;
         ControlFlow::Continue(())
     }

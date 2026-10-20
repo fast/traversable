@@ -19,12 +19,15 @@ use std::cell::RefCell;
 use std::ops::ControlFlow;
 use std::rc::Rc;
 
+use traversable::Continue;
 use traversable::Traversable;
 use traversable::TraversableMut;
 use traversable::Visitor;
 use traversable::VisitorMut;
 use traversable::combinator::VisitorExt;
 use traversable::combinator::VisitorMutExt;
+use traversable::function::visitor;
+use traversable::function::visitor_mut;
 
 #[derive(Traversable, TraversableMut)]
 struct Data {
@@ -42,7 +45,7 @@ struct RecordVisitor {
 impl Visitor for RecordVisitor {
     type Break = i32;
 
-    fn enter(&mut self, this: &dyn Any) -> ControlFlow<Self::Break> {
+    fn enter(&mut self, this: &dyn Any) -> ControlFlow<Self::Break, Continue> {
         if let Some(d) = this.downcast_ref::<Data>() {
             self.log
                 .borrow_mut()
@@ -51,7 +54,7 @@ impl Visitor for RecordVisitor {
                 return ControlFlow::Break(d.val);
             }
         }
-        ControlFlow::Continue(())
+        ControlFlow::Continue(Continue::Children(()))
     }
 
     fn leave(&mut self, this: &dyn Any) -> ControlFlow<Self::Break> {
@@ -95,10 +98,10 @@ fn test_visitor_or() {
         "v2: enter 1",
         "v1: enter 2",
         "v2: enter 2",
-        "v1: leave 2",
         "v2: leave 2",
-        "v1: leave 1",
+        "v1: leave 2",
         "v2: leave 1",
+        "v1: leave 1",
     ];
     assert_eq!(*log.borrow(), expected);
 }
@@ -180,11 +183,11 @@ struct MutVisitor {
 
 impl VisitorMut for MutVisitor {
     type Break = ();
-    fn enter_mut(&mut self, this: &mut dyn Any) -> ControlFlow<()> {
+    fn enter_mut(&mut self, this: &mut dyn Any) -> ControlFlow<(), Continue> {
         if let Some(d) = this.downcast_mut::<Data>() {
             d.val *= self.val_multiplier;
         }
-        ControlFlow::Continue(())
+        ControlFlow::Continue(Continue::Children(()))
     }
 }
 
@@ -209,4 +212,70 @@ fn test_visitor_mut_or() {
     assert_eq!(data.val, 6);
     // 2 * 2 * 3 = 12
     assert_eq!(data.child.unwrap().val, 12);
+}
+
+#[test]
+fn chain_grouping() {
+    for skip in [None, Some(1), Some(2), Some(3)] {
+        let log = RefCell::new(Vec::new());
+        let record = |id| {
+            let log = &log;
+            visitor(
+                move |_: &Data| {
+                    ControlFlow::<(), _>::Continue(if skip == Some(id) {
+                        Continue::Skip
+                    } else {
+                        Continue::Children(())
+                    })
+                },
+                move |_: &Data| {
+                    log.borrow_mut().push(id);
+                    ControlFlow::Continue(())
+                },
+            )
+        };
+        let mut data = Data {
+            val: 1,
+            child: None,
+        };
+        assert!(
+            data.traverse(&mut record(1).chain(record(2)).chain(record(3)))
+                .is_continue()
+        );
+        let left = log.take();
+        assert!(
+            data.traverse(&mut record(1).chain(record(2).chain(record(3))))
+                .is_continue()
+        );
+        let right = log.take();
+        assert_eq!(left, right);
+        assert_eq!(left, (1..skip.unwrap_or(4)).rev().collect::<Vec<_>>());
+
+        let change = |id| {
+            visitor_mut(
+                move |_: &mut Data| {
+                    ControlFlow::<(), _>::Continue(if skip == Some(id) {
+                        Continue::Skip
+                    } else {
+                        Continue::Children(())
+                    })
+                },
+                move |node: &mut Data| {
+                    node.val = node.val * 10 + id;
+                    ControlFlow::Continue(())
+                },
+            )
+        };
+        assert!(
+            data.traverse_mut(&mut change(1).chain(change(2)).chain(change(3)))
+                .is_continue()
+        );
+        let left = data.val;
+        data.val = 1;
+        assert!(
+            data.traverse_mut(&mut change(1).chain(change(2).chain(change(3))))
+                .is_continue()
+        );
+        assert_eq!(left, data.val);
+    }
 }

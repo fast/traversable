@@ -17,6 +17,7 @@
 use std::any::Any;
 use std::ops::ControlFlow;
 
+use traversable::Continue;
 use traversable::TraversableMut;
 use traversable::VisitorMut;
 
@@ -42,7 +43,7 @@ struct ChainCutter {
 impl VisitorMut for ChainCutter {
     type Break = ();
 
-    fn enter_mut(&mut self, this: &mut dyn Any) -> ControlFlow<Self::Break> {
+    fn enter_mut(&mut self, this: &mut dyn Any) -> ControlFlow<Self::Break, Continue> {
         if let Some(item) = this.downcast_mut::<Chain>() {
             if self.cut_at_depth == 0 {
                 item.next = None;
@@ -51,7 +52,7 @@ impl VisitorMut for ChainCutter {
             }
         }
 
-        ControlFlow::Continue(())
+        ControlFlow::Continue(Continue::Children(()))
     }
 }
 

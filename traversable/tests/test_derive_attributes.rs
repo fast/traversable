@@ -17,6 +17,7 @@
 use std::any::Any;
 use std::ops::ControlFlow;
 
+use traversable::Continue;
 use traversable::Traversable;
 use traversable::TraversableMut;
 use traversable::Visitor;
@@ -78,7 +79,7 @@ struct Counts {
 impl Visitor for Counts {
     type Break = ();
 
-    fn enter(&mut self, this: &dyn Any) -> ControlFlow<Self::Break> {
+    fn enter(&mut self, this: &dyn Any) -> ControlFlow<Self::Break, Continue> {
         if this.is::<Parent>() {
             self.parent_enter += 1;
         } else if this.is::<Child>() {
@@ -93,7 +94,7 @@ impl Visitor for Counts {
             self.skip_children_enum_enter += 1;
         }
 
-        ControlFlow::Continue(())
+        ControlFlow::Continue(Continue::Children(()))
     }
 
     fn leave(&mut self, this: &dyn Any) -> ControlFlow<Self::Break> {
@@ -118,7 +119,7 @@ impl Visitor for Counts {
 impl VisitorMut for Counts {
     type Break = ();
 
-    fn enter_mut(&mut self, this: &mut dyn Any) -> ControlFlow<Self::Break> {
+    fn enter_mut(&mut self, this: &mut dyn Any) -> ControlFlow<Self::Break, Continue> {
         if this.is::<Parent>() {
             self.parent_enter += 1;
         } else if this.is::<Child>() {
@@ -131,7 +132,7 @@ impl VisitorMut for Counts {
             self.skip_self_and_children_parent_enter += 1;
         }
 
-        ControlFlow::Continue(())
+        ControlFlow::Continue(Continue::Children(()))
     }
 
     fn leave_mut(&mut self, this: &mut dyn Any) -> ControlFlow<Self::Break> {

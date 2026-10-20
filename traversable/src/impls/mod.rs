@@ -36,7 +36,9 @@ macro_rules! trivial_traverse_impl {
     ( $type:ty ) => {
         impl Traversable for $type {
             fn traverse<V: Visitor>(&self, visitor: &mut V) -> ControlFlow<V::Break> {
-                visitor.enter(self)?;
+                if let crate::Continue::Skip = visitor.enter(self)? {
+                    return ControlFlow::Continue(());
+                }
                 visitor.leave(self)?;
                 ControlFlow::Continue(())
             }
@@ -44,7 +46,9 @@ macro_rules! trivial_traverse_impl {
 
         impl TraversableMut for $type {
             fn traverse_mut<V: VisitorMut>(&mut self, visitor: &mut V) -> ControlFlow<V::Break> {
-                visitor.enter_mut(self)?;
+                if let crate::Continue::Skip = visitor.enter_mut(self)? {
+                    return ControlFlow::Continue(());
+                }
                 visitor.leave_mut(self)?;
                 ControlFlow::Continue(())
             }

@@ -13,35 +13,54 @@
 // limitations under the License.
 
 //! Visitors from functions or closures.
+//!
+//! Enter closures may return `ControlFlow<B, ()>` to visit children, or
+//! `ControlFlow<B, Continue>` to choose whether to skip a subtree.
 
 use core::any::Any;
 use core::marker::PhantomData;
 use core::ops::ControlFlow;
 
+use crate::Continue;
 use crate::Visitor;
 use crate::VisitorMut;
 
+#[cfg(feature = "std")]
+mod events;
+#[cfg(feature = "std")]
+pub use self::events::VisitEvent;
+#[cfg(feature = "std")]
+pub use self::events::visitor_enter_scoped;
+#[cfg(feature = "std")]
+pub use self::events::visitor_enter_scoped_mut;
+#[cfg(feature = "std")]
+pub use self::events::visitor_events;
+#[cfg(feature = "std")]
+pub use self::events::visitor_events_mut;
+
 /// Type returned by `visitor` factories.
-pub struct FnVisitor<T, B, F1, F2> {
+pub struct FnVisitor<T, B, F1, F2, C = ()> {
     enter: F1,
     leave: F2,
     marker_type: PhantomData<T>,
     marker_break: PhantomData<B>,
+    marker_continue: PhantomData<C>,
 }
 
-impl<T, B, F1, F2> Visitor for FnVisitor<T, B, F1, F2>
+impl<T, B, F1, F2, C> Visitor for FnVisitor<T, B, F1, F2, C>
 where
     T: Any,
-    F1: FnMut(&T) -> ControlFlow<B>,
+    F1: FnMut(&T) -> ControlFlow<B, C>,
+    C: Into<Continue>,
     F2: FnMut(&T) -> ControlFlow<B>,
 {
     type Break = B;
 
-    fn enter(&mut self, this: &dyn Any) -> ControlFlow<Self::Break> {
+    fn enter(&mut self, this: &dyn Any) -> ControlFlow<Self::Break, Continue> {
         if let Some(item) = this.downcast_ref::<T>() {
-            (self.enter)(item)?;
+            return (self.enter)(item).map_continue(Into::into);
         }
-        ControlFlow::Continue(())
+        ControlFlow::Continue(Continue::Children(()))
     }
 
     fn leave(&mut self, this: &dyn Any) -> ControlFlow<Self::Break> {
@@ -52,19 +71,20 @@ where
     }
 }
 
-impl<T, B, F1, F2> VisitorMut for FnVisitor<T, B, F1, F2>
+impl<T, B, F1, F2, C> VisitorMut for FnVisitor<T, B, F1, F2, C>
 where
     T: Any,
-    F1: FnMut(&mut T) -> ControlFlow<B>,
+    F1: FnMut(&mut T) -> ControlFlow<B, C>,
+    C: Into<Continue>,
     F2: FnMut(&mut T) -> ControlFlow<B>,
 {
     type Break = B;
 
-    fn enter_mut(&mut self, this: &mut dyn Any) -> ControlFlow<Self::Break> {
+    fn enter_mut(&mut self, this: &mut dyn Any) -> ControlFlow<Self::Break, Continue> {
         if let Some(item) = this.downcast_mut::<T>() {
-            (self.enter)(item)?;
+            return (self.enter)(item).map_continue(Into::into);
         }
-        ControlFlow::Continue(())
+        ControlFlow::Continue(Continue::Children(()))
     }
 
     fn leave_mut(&mut self, this: &mut dyn Any) -> ControlFlow<Self::Break> {
@@ -105,7 +125,7 @@ type DefaultVisitFnMut<T, B> = fn(&mut T) -> ControlFlow<B>;
 /// let item = Item { value: 10 };
 /// let mut total_value = 0;
 ///
-/// let mut visitor = visitor::<Item, (), _, _>(
+/// let mut visitor = visitor::<Item, (), _, _, _>(
 ///     |node: &Item| {
 ///         // enter closure
 ///         total_value += node.value;
@@ -121,10 +141,11 @@ type DefaultVisitFnMut<T, B> = fn(&mut T) -> ControlFlow<B>;
 /// assert_eq!(total_value, 10);
 /// # }
 /// ```
-pub fn visitor<T, B, F1, F2>(enter: F1, leave: F2) -> FnVisitor<T, B, F1, F2>
+pub fn visitor<T, B, F1, F2, C>(enter: F1, leave: F2) -> FnVisitor<T, B, F1, F2, C>
 where
     T: Any,
-    F1: FnMut(&T) -> ControlFlow<B>,
+    F1: FnMut(&T) -> ControlFlow<B, C>,
+    C: Into<Continue>,
     F2: FnMut(&T) -> ControlFlow<B>,
 {
     FnVisitor {
@@ -132,6 +153,7 @@ where
         leave,
         marker_type: PhantomData,
         marker_break: PhantomData,
+        marker_continue: PhantomData,
     }
 }
 
@@ -159,7 +181,7 @@ where
 /// let item = Item { value: 20 };
 /// let mut count = 0;
 ///
-/// let mut visitor = visitor_enter::<Item, (), _>(|node: &Item| {
+/// let mut visitor = visitor_enter::<Item, (), _, _>(|node: &Item| {
 ///     // enter closure
 ///     count += 1;
 ///     ControlFlow::Continue(())
@@ -169,16 +191,18 @@ where
 /// assert_eq!(count, 1);
 /// # }
 /// ```
-pub fn visitor_enter<T, B, F>(enter: F) -> FnVisitor<T, B, F, DefaultVisitFn<T, B>>
+pub fn visitor_enter<T, B, F, C>(enter: F) -> FnVisitor<T, B, F, DefaultVisitFn<T, B>, C>
 where
     T: Any,
-    F: FnMut(&T) -> ControlFlow<B>,
+    F: FnMut(&T) -> ControlFlow<B, C>,
+    C: Into<Continue>,
 {
     FnVisitor {
         enter,
         leave: |_| ControlFlow::Continue(()),
         marker_type: PhantomData,
         marker_break: PhantomData,
+        marker_continue: PhantomData,
     }
 }
 
@@ -226,6 +250,7 @@ where
         leave,
         marker_type: PhantomData,
         marker_break: PhantomData,
+        marker_continue: PhantomData,
     }
 }
 
@@ -256,7 +281,7 @@ where
 ///
 /// let mut item = Item { value: 10 };
 ///
-/// let mut visitor = visitor_mut::<Item, (), _, _>(
+/// let mut visitor = visitor_mut::<Item, (), _, _, _>(
 ///     |node: &mut Item| {
 ///         // enter_mut closure
 ///         node.value += 1;
@@ -272,10 +297,11 @@ where
 /// assert_eq!(item.value, 11);
 /// # }
 /// ```
-pub fn visitor_mut<T, B, F1, F2>(enter: F1, leave: F2) -> FnVisitor<T, B, F1, F2>
+pub fn visitor_mut<T, B, F1, F2, C>(enter: F1, leave: F2) -> FnVisitor<T, B, F1, F2, C>
 where
     T: Any,
-    F1: FnMut(&mut T) -> ControlFlow<B>,
+    F1: FnMut(&mut T) -> ControlFlow<B, C>,
+    C: Into<Continue>,
     F2: FnMut(&mut T) -> ControlFlow<B>,
 {
     FnVisitor {
@@ -283,6 +309,7 @@ where
         leave,
         marker_type: PhantomData,
         marker_break: PhantomData,
+        marker_continue: PhantomData,
     }
 }
 
@@ -310,7 +337,7 @@ where
 /// let mut item = Item { value: 20 };
 /// let mut count = 0;
 ///
-/// let mut visitor = visitor_enter_mut::<Item, (), _>(|node: &mut Item| {
+/// let mut visitor = visitor_enter_mut::<Item, (), _, _>(|node: &mut Item| {
 ///     // enter_mut closure
 ///     count += 1;
 ///     ControlFlow::Continue(())
@@ -320,16 +347,18 @@ where
 /// assert_eq!(count, 1);
 /// # }
 /// ```
-pub fn visitor_enter_mut<T, B, F>(enter: F) -> FnVisitor<T, B, F, DefaultVisitFnMut<T, B>>
+pub fn visitor_enter_mut<T, B, F, C>(enter: F) -> FnVisitor<T, B, F, DefaultVisitFnMut<T, B>, C>
 where
     T: Any,
-    F: FnMut(&mut T) -> ControlFlow<B>,
+    F: FnMut(&mut T) -> ControlFlow<B, C>,
+    C: Into<Continue>,
 {
     FnVisitor {
         enter,
         leave: |_| ControlFlow::Continue(()),
         marker_type: PhantomData,
         marker_break: PhantomData,
+        marker_continue: PhantomData,
     }
 }
 
@@ -377,5 +406,6 @@ where
         leave,
         marker_type: PhantomData,
         marker_break: PhantomData,
+        marker_continue: PhantomData,
     }
 }

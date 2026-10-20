@@ -18,6 +18,7 @@ use std::any::Any;
 use std::ops::ControlFlow;
 
 use ordered_float_5::OrderedFloat;
+use traversable::Continue;
 use traversable::Traversable as _;
 use traversable::TraversableMut as _;
 use traversable::Visitor;
@@ -38,22 +39,22 @@ fn test_ordered_float() {
     impl Visitor for FloatExpr {
         type Break = ();
 
-        fn enter(&mut self, this: &dyn Any) -> ControlFlow<Self::Break> {
+        fn enter(&mut self, this: &dyn Any) -> ControlFlow<Self::Break, Continue> {
             if let Some(Literal::Float(_)) = this.downcast_ref::<Literal>() {
                 self.0 = true;
             }
-            ControlFlow::Continue(())
+            ControlFlow::Continue(Continue::Children(()))
         }
     }
 
     impl VisitorMut for FloatExpr {
         type Break = ();
 
-        fn enter_mut(&mut self, this: &mut dyn Any) -> ControlFlow<Self::Break> {
+        fn enter_mut(&mut self, this: &mut dyn Any) -> ControlFlow<Self::Break, Continue> {
             if let Some(Literal::Float(_)) = this.downcast_ref::<Literal>() {
                 self.0 = true;
             }
-            ControlFlow::Continue(())
+            ControlFlow::Continue(Continue::Children(()))
         }
     }
 

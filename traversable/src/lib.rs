@@ -43,6 +43,7 @@
 //! use std::any::Any;
 //! use std::ops::ControlFlow;
 //!
+//! use traversable::Continue;
 //! use traversable::Traversable;
 //! use traversable::Visitor;
 //!
@@ -68,12 +69,12 @@
 //! impl Visitor for FileCounter {
 //!     type Break = ();
 //!
-//!     fn enter(&mut self, node: &dyn Any) -> ControlFlow<Self::Break> {
+//!     fn enter(&mut self, node: &dyn Any) -> ControlFlow<Self::Break, Continue> {
 //!         if let Some(file) = node.downcast_ref::<File>() {
 //!             self.count += 1;
 //!             self.total_size += file.size;
 //!         }
-//!         ControlFlow::Continue(())
+//!         ControlFlow::Continue(Continue::Children(()))
 //!     }
 //! }
 //!
@@ -149,6 +150,21 @@ pub mod function;
 /// Implementations for third-party library types.
 mod impls;
 
+/// Controls whether traversal descends into a node.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Continue<S = ()> {
+    /// Visit children, then call leave. Scoped visitors carry state in this variant.
+    Children(S),
+    /// Skip children and leave for this node, then continue with its siblings.
+    Skip,
+}
+
+impl From<()> for Continue {
+    fn from((): ()) -> Self {
+        Self::Children(())
+    }
+}
+
 /// A visitor that can be used to traverse a data structure.
 ///
 /// Implement this trait to define custom logic that executes when
@@ -167,10 +183,11 @@ pub trait Visitor {
 
     /// Called when the visitor is entering a node.
     ///
-    /// Default implementation does nothing and continues traversal.
-    fn enter(&mut self, this: &dyn core::any::Any) -> ControlFlow<Self::Break> {
+    /// Return [`Continue::Skip`] to skip children and leave for this node.
+    /// The default visits children and then calls leave.
+    fn enter(&mut self, this: &dyn core::any::Any) -> ControlFlow<Self::Break, Continue> {
         let _ = this;
-        ControlFlow::Continue(())
+        ControlFlow::Continue(Continue::Children(()))
     }
 
     /// Called when the visitor is leaving a node.
@@ -213,11 +230,14 @@ pub trait Visitor {
 /// impl VisitorMut for Incrementer {
 ///     type Break = ();
 ///
-///     fn enter_mut(&mut self, node: &mut dyn Any) -> ControlFlow<Self::Break> {
+///     fn enter_mut(
+///         &mut self,
+///         node: &mut dyn Any,
+///     ) -> ControlFlow<Self::Break, traversable::Continue> {
 ///         if let Some(n) = node.downcast_mut::<Node>() {
 ///             n.value += 1;
 ///         }
-///         ControlFlow::Continue(())
+///         ControlFlow::Continue(traversable::Continue::Children(()))
 ///     }
 /// }
 ///
@@ -236,10 +256,11 @@ pub trait VisitorMut {
 
     /// Called when the visitor is entering a mutable node.
     ///
-    /// Default implementation does nothing and continues traversal.
-    fn enter_mut(&mut self, this: &mut dyn core::any::Any) -> ControlFlow<Self::Break> {
+    /// Return [`Continue::Skip`] to skip children and leave for this node.
+    /// The default visits children and then calls leave.
+    fn enter_mut(&mut self, this: &mut dyn core::any::Any) -> ControlFlow<Self::Break, Continue> {
         let _ = this;
-        ControlFlow::Continue(())
+        ControlFlow::Continue(Continue::Children(()))
     }
 
     /// Called when the visitor is leaving a mutable node.

@@ -242,7 +242,9 @@ fn impl_traversable(input: DeriveInput, mutable: bool) -> Result<TokenStream> {
         None
     } else {
         Some(quote! {
-            #crate_name::#visitor::#enter_method(visitor, self)?;
+            if let #crate_name::Continue::Skip = #crate_name::#visitor::#enter_method(visitor, self)? {
+                return ::core::ops::ControlFlow::Continue(());
+            }
         })
     };
 

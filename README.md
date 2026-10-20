@@ -60,12 +60,12 @@ struct FileCounter {
 impl Visitor for FileCounter {
     type Break = ();
 
-    fn enter(&mut self, node: &dyn Any) -> ControlFlow<Self::Break> {
+    fn enter(&mut self, node: &dyn Any) -> ControlFlow<Self::Break, traversable::Continue> {
         if let Some(file) = node.downcast_ref::<File>() {
             self.count += 1;
             self.total_size += file.size;
         }
-        ControlFlow::Continue(())
+        ControlFlow::Continue(traversable::Continue::Children(()))
     }
 }
 

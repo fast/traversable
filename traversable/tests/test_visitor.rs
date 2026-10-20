@@ -23,7 +23,7 @@ use traversable::function::visitor_leave_mut;
 
 #[test]
 fn test_visitor() {
-    let mut visitor = visitor_enter::<i32, (), _>(|item| {
+    let mut visitor = visitor_enter::<i32, (), _, _>(|item| {
         assert_eq!(*item, 42);
         ControlFlow::Continue(())
     });
